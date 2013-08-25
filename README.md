@@ -1,12 +1,13 @@
 Proof of concept
 ===
 
-> recast.js is an emscripten experiment to use the RecastDetour in JavaScript
+> recast.js is an [Emscripten](https://github.com/kripken/emscripten) experiment to use the [RecastDetour](https://code.google.com/p/recastnavigation) in JavaScript
 
 Goal
 ===
 
 To use RecastDetour primitives against a mesh, likely a Three.js mesh 
+
 
 Howto
 ===

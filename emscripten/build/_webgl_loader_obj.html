@@ -24,62 +24,19 @@
 			#info a, .button {
 				color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer
 			}
-			#ctrl {
-				position: absolute;
-				top: 0px;
-				left: 0px;
-				width: 200px;
-				color: #ffffff;
-				padding: 5px;
-				font-family: Monospace;
-				font-size: 13px;
-				z-index:100;
-			}
 			#loading {
 				position: absolute;
 				display: none;
-			}
-			label {
-				display: block;
 			}
 		</style>
 	</head>
 
 	<body>
 		<div id="info">
-			<a href="http://threejs.org" target="_blank">three.js</a> - OBJLoader test
+			<a href="http://threejs.org" target="_blank">three.js</a> - RecastDetour test
 		</div>
 
 		<img id="loading" src="loading.gif">
-
-		<div id="ctrl">
-			<label>CellSize</label>
-			<input type="range" value="0" min="1" max="100" onmouseup="Module.set_cellSize(this.value/100); build();" />
-			<label>CellHeight</label>
-			<input type="range" value="0" min="1" max="100" onmouseup="Module.set_cellHeight(this.value/100); build();" />
-			<label>AgentHeight</label>
-			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_agentHeight(this.value/100); build();" />
-			<label>AgentRadius</label>
-			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_agentRadius(this.value/100); build();" />
-			<label>AgentMaxClimb</label>
-			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_agentMaxClimb(this.value/100); build();" />
-			<label>AgentMaxSlope</label>
-			<input type="range" value="0" min="1" max="9000" onmouseup="Module.set_agentMaxSlope(this.value/100); build();" />
-			<label>RegionMinSize</label>
-			<input type="range" value="0" min="1" max="15000" onmouseup="Module.set_regionMinSize(this.value/100); build();" />
-			<label>RegionMergeSize</label>
-			<input type="range" value="0" min="1" max="15000" onmouseup="Module.set_regionMergeSize(this.value/100); build();" />
-			<label>EdgeMaxLen</label>
-			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_edgeMaxLen(this.value/100); build();" />
-			<label>EdgeMaxError</label>
-			<input type="range" value="0" min="1" max="300" onmouseup="Module.set_edgeMaxError(this.value/100); build();" />
-			<label>VertsPerPoly</label>
-			<input type="range" value="0" min="1" max="1200" onmouseup="Module.set_vertsPerPoly(this.value/100); build();" />
-			<label>DetailSampleDist</label>
-			<input type="range" value="0" min="1" max="1600" onmouseup="Module.set_detailSampleDist(this.value/100); build();" />
-			<label>DetailSampleMaxError</label>
-			<input type="range" value="0" min="1" max="1600" onmouseup="Module.set_detailSampleMaxError(this.value/100); build();" />
-		</div>
 
 		<canvas id="canvas" style="display:none"></canvas>
 
@@ -90,6 +47,7 @@
 
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
+		<script src='js/libs/dat.gui.min.js'></script>
 
 
 	    <script type='text/javascript'>
@@ -164,8 +122,8 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 500 );
-				//camera.position.set(-10, 80, 5);
-				camera.position.set( -127.6335306663251, 55.00411228004397, -215.90593031744592);
+				//camera.position.set(-80, 50, -30);
+				camera.position.set(-57.12, 41.1, -34.62);
 
 				// scene
 
@@ -235,6 +193,93 @@
                 cameraControls = new THREE.TrackballControls( camera, renderer.domElement );
                 cameraControls.target.set( 0, 50, 0 );
 
+				// GUI
+
+				window.Config = {
+					cellSize: 2.66,
+					_cellSize: [ 0.01, 10.0 ],
+
+					cellHeight: 0.53,
+					_cellHeight: [ 0.1, 5.0 ],
+
+					agentHeight: 0.8,
+					_agentHeight: [ 0.01, 5.0 ],
+
+					agentRadius: 0.8,
+					_agentRadius: [ 0.01, 5.0 ],
+
+					agentMaxClimb: 2.39,
+					_agentMaxClimb: [ 0.5, 5.0 ],
+
+					agentMaxSlope: 13.25,
+					_agentMaxSlope: [ 0.5, 90.0 ],
+
+					regionMinSize: 0.1,
+					_regionMinSize: [ 1.0, 150.0 ],
+
+					regionMergeSize: 1.0,
+					_regionMergeSize: [ 1.0, 150.0 ],
+
+					monotonePartitioning: false,
+					_monotonePartitioning: [ true, false ],
+
+					edgeMaxLen: 0.1,
+					_edgeMaxLen: [ 0.1, 50.0 ],
+
+					edgeMaxError: 1.0,
+					_edgeMaxError: [ 0.1, 3.0 ],
+					
+					//vertsPerPoly: 3.0,
+					//vertsPerPoly: [ 3.0, 12.0 ],		
+
+					detailSampleDist: 0.0,
+					_detailSampleDist: [ 0.0, 16.0 ],
+
+					detailSampleMaxError: 8.0,
+					_detailSampleMaxError: [ 8.0, 16.0 ],
+
+					initFromThreeJS: function() {
+						Module.init();
+					},
+					
+					initWithFile: function() {
+						Module.initWithFile();
+					},
+					
+					build: function() {
+						Module.build();
+					},
+
+					navMeshWireframe: false,
+					navMeshVertices: 0,
+					drawNavMesh: function() {
+						Module.iterateOnNavMesh();
+					},
+
+
+				};
+
+				gui = new dat.GUI();
+
+				gui.add(Config, 'initFromThreeJS');
+				gui.add(Config, 'initWithFile');
+				gui.add(Config, 'build');
+				gui.add(Config, 'drawNavMesh');
+
+				gui.add(Config, 'navMeshWireframe', false, true, function(){
+					window.navigationMesh.material[0].wireframe = Config.wireframe;
+				});
+
+				gui.add(Config, 'navMeshVertices', 0, 10000).listen();
+
+				[	'cellSize', 'cellHeight', 'agentHeight', 'agentRadius', 'agentMaxClimb',
+					'agentMaxSlope', 'regionMinSize', 'regionMergeSize', 'monotonePartitioning',
+					'edgeMaxLen', 'edgeMaxError', 'detailSampleDist', 'detailSampleMaxError'
+				].forEach(function(s) {
+					gui.add(Config, s, Config['_'+s][0], Config['_'+s][1] ).onFinishChange(function(){
+						Module['set_' + s]( Config[s] );
+					});
+				});
 			}
 
 			function onWindowResize() {

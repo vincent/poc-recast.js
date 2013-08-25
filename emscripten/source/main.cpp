@@ -30,17 +30,17 @@ dtCrowd* m_crowd;
 
 unsigned char m_navMeshDrawFlags;
 
-float m_cellSize = 0.4f;
-float m_cellHeight = 0.2f;
+float m_cellSize = 2.66f;
+float m_cellHeight = 0.53f;
 
 bool m_keepInterResults;
 float m_totalBuildTimeMs;
 
 //// DEFAULTS
-float m_agentHeight = 0.01f;  // , 5.0f, 0.1f);
-float m_agentRadius = 0.01f;  // , 5.0f, 0.1f);
-float m_agentMaxClimb = 0.5f;  // , 5.0f, 0.1f);
-float m_agentMaxSlope = 0.5f;  // , 90.0f, 1.0f);
+float m_agentHeight = 0.8f;  // , 5.0f, 0.1f);
+float m_agentRadius = 0.8f;  // , 5.0f, 0.1f);
+float m_agentMaxClimb = 2.4f;  // , 5.0f, 0.1f);
+float m_agentMaxSlope = 13.2f;  // , 90.0f, 1.0f);
 
 float m_regionMinSize = 1.0f;  // , 150.0f, 1.0f);
 float m_regionMergeSize = 1.0f;  // , 150.0f, 1.0f);
@@ -152,6 +152,8 @@ void debugConfig()
 	printf(" m_agentMaxClimb=%f \n", m_agentMaxClimb);
 	printf(" m_agentMaxSlope=%f \n", m_agentMaxSlope);
 
+	printf(" m_monotonePartitioning=%u\n", m_monotonePartitioning);
+
 	printf(" m_regionMinSize=%f \n", m_regionMinSize);
 	printf(" m_regionMergeSize=%f \n", m_regionMergeSize);
 
@@ -218,21 +220,15 @@ void iterateOnNavMesh(){
 	int nIndex = 0;
 	char buff[512];
 
-	// window.object.scale.set(10, 10, 10); window.object.position.set(200, 0, -200);
-	// window.object.scale.set(2.1, 2.1, 4); window.object.position.setZ(-70)
-
-	// sprintf(buff, "bvQuantFactor=%u", vi[0], vi[1], vi[2]);
-	// emscripten_log(buff);
-
-	sprintf(buff, "nvp=%u, cs=%f, ch=%f, orig=%f", nvp, cs, ch, orig);
+	sprintf(buff, "nvp=%u, cs=%f, ch=%f, orig={%f, %f, %f}", nvp, cs, ch, orig[0], orig[1], orig[2]);
 	emscripten_log(buff);
 
-	emscripten_run_script("window.materials = [ new THREE.MeshPhongMaterial({ color:0xff8888, ambient: 0xff8888, side:THREE.DoubleSide, wireframe:true }) ];");
+	emscripten_run_script("window.materials = [ new THREE.MeshBasicMaterial({ color:0xff0000, ambient: 0xff0000, side:THREE.DoubleSide, wireframe:true }) ];");
 	emscripten_run_script("window.points = [];");
 
 	for (int i = 0; i < m_pmesh->npolys; ++i)
 	{
-		if (m_pmesh->areas[i] == SAMPLE_POLYAREA_GROUND)
+		if (true) // || m_pmesh->areas[i] == SAMPLE_POLYAREA_GROUND)
         {
 			const unsigned short* p = &m_pmesh->polys[i*nvp*2];
 
@@ -246,17 +242,15 @@ void iterateOnNavMesh(){
 
 				// emscripten_debugger();
 
-				// TODO: how to add navmesh model ?
-
-				sprintf(buff, "vi = { x:%u, y:%u, z:%u }", vi[0], vi[1], vi[2]);
-				emscripten_log(buff);
+				// sprintf(buff, "vi = { x:%u, y:%u, z:%u }", vi[0], vi[1], vi[2]);
+				// emscripten_log(buff);
 
 				for (int k = 0; k < 3; ++k)
 				{
 					const unsigned short* v = &m_pmesh->verts[vi[k]*3];
-					const float x = orig[0] + v[0]; //*cs;
-					const float y = orig[1] + (v[1]+1); //*ch;
-					const float z = orig[2] + v[2] - 140; //*cs;
+					const float x = orig[0] + v[0]*cs;
+					const float y = orig[1] + (v[1]+1)*ch;
+					const float z = orig[2] + v[2]*cs;
 
 					sprintf(buff, "window.points.push(new THREE.Vector3(%f, %f, %f));", x, y, z);
 					emscripten_run_script(buff);
@@ -265,21 +259,15 @@ void iterateOnNavMesh(){
 				}
 			}
 		}
-
-		//sprintf(buff, "window.object.position.set( %u, %u, %u );", vi[0], vi[1], vi[2]);
-		//emscripten_run_script(buff);
-		//emscripten_log(buff);
 	}
-	emscripten_log("window.points.length, ' points'", false);
+	emscripten_log("window.points.length, ' vertices'", false);
+	emscripten_run_script("Config.navMeshVertices = window.points.length;");
 
-	emscripten_run_script("window.object = new THREE.Mesh(new THREE.ConvexGeometry(window.points), window.materials);");		
+	emscripten_run_script("if (window.navigationMesh) scene.remove(window.navigationMesh);");
+	emscripten_run_script("if (window.points.length < 70) { window.navigationMesh = THREE.SceneUtils.createMultiMaterialObject(new THREE.ConvexGeometry(window.points), window.materials); } else throw \"HUUMM..NO.. too much vertices, ComplexGeometry will take too long, sorry.\"");		
 
-	sprintf(buff, "/* window.object.position.set( %u, %u, %u );  */ window.object.scale.set( new THREE.Vector3( %f, %f, %f ) );  ", 0, 0, 0, 1/cs, 1/ch, 1/cs);
-	emscripten_run_script(buff);
-	emscripten_log(buff);
-
-	emscripten_run_script("scene.add(window.object);");
-	emscripten_log("window.object", false);
+	emscripten_run_script("scene.add(window.navigationMesh);");
+	emscripten_log("window.navigationMesh", false);
 }
 
 int getMaxTiles(){
@@ -306,6 +294,7 @@ void set_edgeMaxError(float val){			m_edgeMaxError = val;			}
 void set_vertsPerPoly(float val){			m_vertsPerPoly = val;			}		
 void set_detailSampleDist(float val){		m_detailSampleDist = val;		}
 void set_detailSampleMaxError(float val){	m_detailSampleMaxError = val;	}
+void set_monotonePartitioning(int val){		m_monotonePartitioning = !!val;	}
 
 /////////////////////////////
 bool init()
@@ -420,7 +409,7 @@ bool build()
 	// the are type for each of the meshes and rasterize them.
 	memset(m_triareas, 0, ntris*sizeof(unsigned char));
 	rcMarkWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle, verts, nverts, tris, ntris, m_triareas);
-	printf("%u Walkable Triangles\n", sizeof(m_triareas));
+	printf("%u Walkable Triangles\n", sizeof(m_triareas)/sizeof(unsigned char));
 
 	rcRasterizeTriangles(m_ctx, verts, nverts, tris, m_triareas, ntris, *m_solid, m_cfg.walkableClimb);
 
