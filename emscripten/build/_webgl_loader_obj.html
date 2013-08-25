@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - loaders - OBJ loader</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button {
+				color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer
+			}
+			#ctrl {
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				width: 200px;
+				color: #ffffff;
+				padding: 5px;
+				font-family: Monospace;
+				font-size: 13px;
+				z-index:100;
+			}
+			#loading {
+				position: absolute;
+				display: none;
+			}
+			label {
+				display: block;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="info">
+			<a href="http://threejs.org" target="_blank">three.js</a> - OBJLoader test
+		</div>
+
+		<img id="loading" src="loading.gif">
+
+		<div id="ctrl">
+			<label>CellSize</label>
+			<input type="range" value="0" min="1" max="100" onmouseup="Module.set_cellSize(this.value/100); build();" />
+			<label>CellHeight</label>
+			<input type="range" value="0" min="1" max="100" onmouseup="Module.set_cellHeight(this.value/100); build();" />
+			<label>AgentHeight</label>
+			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_agentHeight(this.value/100); build();" />
+			<label>AgentRadius</label>
+			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_agentRadius(this.value/100); build();" />
+			<label>AgentMaxClimb</label>
+			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_agentMaxClimb(this.value/100); build();" />
+			<label>AgentMaxSlope</label>
+			<input type="range" value="0" min="1" max="9000" onmouseup="Module.set_agentMaxSlope(this.value/100); build();" />
+			<label>RegionMinSize</label>
+			<input type="range" value="0" min="1" max="15000" onmouseup="Module.set_regionMinSize(this.value/100); build();" />
+			<label>RegionMergeSize</label>
+			<input type="range" value="0" min="1" max="15000" onmouseup="Module.set_regionMergeSize(this.value/100); build();" />
+			<label>EdgeMaxLen</label>
+			<input type="range" value="0" min="1" max="500" onmouseup="Module.set_edgeMaxLen(this.value/100); build();" />
+			<label>EdgeMaxError</label>
+			<input type="range" value="0" min="1" max="300" onmouseup="Module.set_edgeMaxError(this.value/100); build();" />
+			<label>VertsPerPoly</label>
+			<input type="range" value="0" min="1" max="1200" onmouseup="Module.set_vertsPerPoly(this.value/100); build();" />
+			<label>DetailSampleDist</label>
+			<input type="range" value="0" min="1" max="1600" onmouseup="Module.set_detailSampleDist(this.value/100); build();" />
+			<label>DetailSampleMaxError</label>
+			<input type="range" value="0" min="1" max="1600" onmouseup="Module.set_detailSampleMaxError(this.value/100); build();" />
+		</div>
+
+		<canvas id="canvas" style="display:none"></canvas>
+
+		<script src="../build/three.min.js"></script>
+		<script src="js/loaders/OBJLoader.js"></script>
+        <script src="js/controls/TrackballControls.js"></script>
+		<script src="js/geometries/ConvexGeometry.js"></script>
+
+		<script src="js/Detector.js"></script>
+		<script src="js/libs/stats.min.js"></script>
+
+
+	    <script type='text/javascript'>
+	      // have to exist
+		  window._getThreeJSMeshes = function(){ };
+
+	      // connect to canvas
+	      var Module = {
+	        preRun: [],
+	        postRun: [],
+	        print: (function() {
+	          return function(text) {
+	            text = Array.prototype.slice.call(arguments).join(' ');
+	            // These replacements are necessary if you render to raw HTML
+	            //text = text.replace(/&/g, "&amp;");
+	            //text = text.replace(/</g, "&lt;");
+	            //text = text.replace(/>/g, "&gt;");
+	            //text = text.replace('\n', '<br>', 'g');
+	            console.log(text);
+	            return;
+	          };
+	        })(),
+	        printErr: function(text) {
+	          text = Array.prototype.slice.call(arguments).join(' ');
+	          if (0) { // XXX disabled for safety typeof dump == 'function') {
+	            dump(text + '\n'); // fast, straight to the real console
+	          } else {
+	            console.log(text);
+	          }
+	        },
+	        canvas: document.getElementById('canvas'),
+	        setStatus: function(text) {
+	        },
+	        totalDependencies: 0,
+	        monitorRunDependencies: function(left) {
+	          this.totalDependencies = Math.max(this.totalDependencies, left);
+	          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+	        }
+	      };
+	      Module.setStatus('Downloading...');
+	    </script>
+   		<script src="recast.emcc.js"></script>
+
+   		<script type="text/javascript">
+			function build() {
+				var loading = document.getElementById('loading');
+				loading.style.display = 'block';
+				Module.build();
+				loading.style.display = 'none';
+			}
+   		</script>
+
+		<script>
+			var container, stats;
+
+			var camera, scene, renderer, cameraControls;
+
+			var mouseX = 0, mouseY = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+            var clock = new THREE.Clock();
+
+			init();
+			animate();
+
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 500 );
+				//camera.position.set(-10, 80, 5);
+				camera.position.set( -127.6335306663251, 55.00411228004397, -215.90593031744592);
+
+				// scene
+
+				scene = new THREE.Scene();
+
+				var object = new THREE.AxisHelper( 50 );
+				object.position.set(0, 0, 0);
+				scene.add(object);
+
+				var ambient = new THREE.AmbientLight( 0x404040 );
+				scene.add( ambient );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
+
+				// texture
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+
+				var texture = new THREE.Texture();
+
+				var loader = new THREE.ImageLoader( manager );
+				loader.load( 'textures/ash_uvgrid01.jpg', function ( image ) {
+					texture.image = image;
+					texture.needsUpdate = true;
+				});
+
+				// model
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'obj/nav_test.obj', function ( object ) {
+
+					window._getThreeJSMeshes = function(){
+						Module.bareGeomInit()
+						object.traverse( function ( child ) {
+							if ( child instanceof THREE.Mesh ) {
+								child.geometry.vertices.forEach(function(vert){
+									Module.bareGeomAddVertex(vert.x, vert.y, vert.z, 0);
+								});
+								child.geometry.faces.forEach(function(face){
+									Module.bareGeomAddTriangle(face.a, face.b, face.c, 0);
+								});
+							}
+						} );
+						Module.bareGeomValidate()						
+					};
+
+					scene.add( object );
+					console.log('OBJECT ADDED', object);
+
+				} );
+
+				//
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+                // CONTROLS
+
+                cameraControls = new THREE.TrackballControls( camera, renderer.domElement );
+                cameraControls.target.set( 0, 50, 0 );
+
+			}
+
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				mouseX = ( event.clientX - windowHalfX ) / 2;
+				mouseY = ( event.clientY - windowHalfY ) / 2;
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+			function render() {
+
+                var delta = clock.getDelta();
+                cameraControls.update( delta );
+
+				//camera.position.x += ( mouseX - camera.position.x ) * 2;
+				//camera.position.y += ( mouseY - camera.position.y - 50) * .2;
+
+				camera.lookAt( scene.position );
+
+				renderer.render( scene, camera );
+
+			}
+
+			setTimeout(function(){
+				Module.init();
+			}, 1000);
+
+		</script>
+
+	</body>
+</html>
