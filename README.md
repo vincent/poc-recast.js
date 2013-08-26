@@ -17,7 +17,7 @@ Howto
 ===
 
 * have a running Emscripten environement
-* build library bootstrap with ```shell ./build.sh recast.emcc.js``` 
+* build library bootstrap with ```./build.sh recast.emcc.js``` 
  - open ```build/demo.html```
  - use the preloaded file test_nav.obj with ```initWithFile```
  - build the heightmap and stuff with ```initWithFile```
