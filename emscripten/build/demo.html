@@ -251,8 +251,6 @@
 					drawNavMesh: function() {
 						Module.iterateOnNavMesh();
 					},
-
-
 				};
 
 				gui = new dat.GUI();
@@ -260,10 +258,6 @@
 				gui.add(Config, 'initWithFile');
 				gui.add(Config, 'build');
 				gui.add(Config, 'drawNavMesh');
-
-				gui.add(Config, 'navMeshWireframe', false, true, function(){
-					window.navigationMesh.material[0].wireframe = Config.wireframe;
-				});
 
 				gui.add(Config, 'navMeshVertices', 0, 10000).listen();
 
