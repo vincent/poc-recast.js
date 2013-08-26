@@ -1,4 +1,4 @@
-Proof of concept [demo](https://rawgithub.com/vincent/poc-recast.js/blob/master/emscripten/build/demo.html)
+Proof of concept [demo](https://rawgithub.com/vincent/poc-recast.js/master/emscripten/build/demo.html)
 ===
 
 > recast.js is an [Emscripten](https://github.com/kripken/emscripten) experiment to use the [RecastDetour](https://code.google.com/p/recastnavigation) in JavaScript

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - loaders - OBJ loader</title>
+		<title>Three.js webgl - RecastDetour</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -32,10 +32,6 @@
 	</head>
 
 	<body>
-		<div id="info">
-			<a href="http://threejs.org" target="_blank">three.js</a> - RecastDetour test
-		</div>
-
 		<img id="loading" src="loading.gif">
 
 		<canvas id="canvas" style="display:none"></canvas>
@@ -239,11 +235,11 @@
 					_detailSampleMaxError: [ 8.0, 16.0 ],
 
 					initFromThreeJS: function() {
-						Module.init();
+						return Module.init();
 					},
 					
 					initWithFile: function() {
-						Module.initWithFile();
+						return Module.initWithFile();
 					},
 					
 					build: function() {
@@ -261,7 +257,6 @@
 
 				gui = new dat.GUI();
 
-				//gui.add(Config, 'initFromThreeJS');
 				gui.add(Config, 'initWithFile');
 				gui.add(Config, 'build');
 				gui.add(Config, 'drawNavMesh');
