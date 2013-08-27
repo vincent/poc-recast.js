@@ -220,10 +220,10 @@
 				// GUI
 
 				window.Config = {
-					cellSize: 2.66,
+					cellSize: 0.8,
 					_cellSize: [ 0.01, 10.0 ],
 
-					cellHeight: 0.53,
+					cellHeight: 0.8,
 					_cellHeight: [ 0.1, 5.0 ],
 
 					agentHeight: 0.8,
@@ -232,13 +232,13 @@
 					agentRadius: 0.8,
 					_agentRadius: [ 0.01, 5.0 ],
 
-					agentMaxClimb: 2.39,
+					agentMaxClimb: 4.0,
 					_agentMaxClimb: [ 0.5, 5.0 ],
 
-					agentMaxSlope: 13.25,
+					agentMaxSlope: 30.0,
 					_agentMaxSlope: [ 0.5, 90.0 ],
 
-					regionMinSize: 0.1,
+					regionMinSize: 1.0,
 					_regionMinSize: [ 1.0, 150.0 ],
 
 					regionMergeSize: 1.0,
@@ -272,6 +272,7 @@
 					init: function() {
 						Module.initWithFile();
 						Config.Next = 'Build heightmap';
+						Module.build();
 					},
 					
 					detailMeshPoly: 0,
@@ -283,30 +284,37 @@
 					navMeshWireframe: false,
 					navMeshVertices: 0,
 					drawNavMesh: function() {
-						//  Module.getNavMeshVertices(Runtime.addFunction(function(vertices){
-						window.__tmp_func = function(vertices){
-							Config.navMeshVertices = vertices.length;
+						if (window.navigationMesh) {
+							scene.remove(window.navigationMesh);
+							delete window.navigationMesh;
 
-							if (window.navigationMesh) {
-								scene.remove(window.navigationMesh);
-							}
+						} else {
 
-							window.navigationMesh = meshFromVertices(vertices, {
-								color: 0xff0000,
-								ambient: 0xff0000,
-								side: THREE.DoubleSide,
-								wireframe: true,
-								transparent: true,
-								opacity: 0.5
-							})
+							//  Module.getNavMeshVertices(Runtime.addFunction(function(vertices){
+							window.__tmp_func = function(vertices){
+								Config.navMeshVertices = vertices.length;
 
-							if (window.navigationMesh) {
-								scene.add(window.navigationMesh);
-							}
+								if (window.navigationMesh) {
+									scene.remove(window.navigationMesh);
+								}
 
-							Config.Next = 'Change values, rebuild';
-						};
-						Module.getNavMeshVertices('window.__tmp_func');
+								window.navigationMesh = meshFromVertices(vertices, {
+									color: 0xff0000,
+									ambient: 0xff0000,
+									side: THREE.DoubleSide,
+									wireframe: true,
+									transparent: true,
+									opacity: 0.5
+								})
+
+								if (window.navigationMesh) {
+									scene.add(window.navigationMesh);
+								}
+
+								Config.Next = 'Change values, rebuild';
+							};
+							Module.getNavMeshVertices('window.__tmp_func');
+						}
 					},
 
 					drawHeightfieldRegions: function() {
@@ -343,7 +351,7 @@
 				gui.add(Config, 'build');
 				gui.add(Config, 'detailMeshPoly').listen();
 				gui.add(Config, 'drawNavMesh');
-				gui.add(Config, 'drawHeightfieldRegions');
+				//gui.add(Config, 'drawHeightfieldRegions');
 
 				gui.add(Config, 'navMeshVertices', 0, 10000).listen();
 
@@ -353,10 +361,11 @@
 				].forEach(function(s) {
 					gui.add(Config, s, Config['_'+s][0], Config['_'+s][1] ).onFinishChange(function(){
 						Module['set_' + s]( Config[s] );
+						Config.Next = 'Please wait';
+						Module.build();
+						Config.Next = 'Change values, rebuild';
 					});
 				});
-
-
 			}
 
 			function onWindowResize() {

@@ -32,8 +32,8 @@ dtCrowd* m_crowd;
 
 unsigned char m_navMeshDrawFlags;
 
-float m_cellSize = 2.66f;
-float m_cellHeight = 0.53f;
+float m_cellSize = 0.8f;
+float m_cellHeight = 0.8f;
 
 bool m_keepInterResults = true;
 float m_totalBuildTimeMs;
@@ -41,8 +41,8 @@ float m_totalBuildTimeMs;
 //// DEFAULTS
 float m_agentHeight = 0.8f;  // , 5.0f, 0.1f);
 float m_agentRadius = 0.8f;  // , 5.0f, 0.1f);
-float m_agentMaxClimb = 2.4f;  // , 5.0f, 0.1f);
-float m_agentMaxSlope = 13.2f;  // , 90.0f, 1.0f);
+float m_agentMaxClimb = 4.0f;  // , 5.0f, 0.1f);
+float m_agentMaxSlope = 30.0f;  // , 90.0f, 1.0f);
 
 float m_regionMinSize = 1.0f;  // , 150.0f, 1.0f);
 float m_regionMergeSize = 1.0f;  // , 150.0f, 1.0f);
