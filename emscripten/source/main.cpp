@@ -3,6 +3,8 @@
 #include <math.h>
 #include <memory.h>
 
+#include <string>
+
 #include <Recast.h>
 #include <InputGeom.h>
 #include <SampleInterfaces.h>
@@ -33,7 +35,7 @@ unsigned char m_navMeshDrawFlags;
 float m_cellSize = 2.66f;
 float m_cellHeight = 0.53f;
 
-bool m_keepInterResults;
+bool m_keepInterResults = true;
 float m_totalBuildTimeMs;
 
 //// DEFAULTS
@@ -196,6 +198,8 @@ void cleanup()
 	m_dmesh = 0;
 	dtFreeNavMesh(m_navMesh);
 	m_navMesh = 0;
+	//dtNavMeshQuery(m_navQuery);
+	m_navQuery = 0;
 }
 
 void bareGeomInit(){
@@ -211,24 +215,21 @@ void bareGeomAddTriangle(int a, int b, int c, int cap){
 void bareGeomValidate(){
 	m_geom->loadFromMeshLoader(m_ctx, meshLoader);
 }
-void iterateOnNavMesh(){
+void getNavMeshVertices(std::string callback){
 	const int nvp = m_pmesh->nvp;
 	const float cs = m_pmesh->cs;
 	const float ch = m_pmesh->ch;
 	const float* orig = m_pmesh->bmin;
 
-	int nIndex = 0;
 	char buff[512];
 
 	sprintf(buff, "nvp=%u, cs=%f, ch=%f, orig={%f, %f, %f}", nvp, cs, ch, orig[0], orig[1], orig[2]);
 	emscripten_log(buff);
-
-	emscripten_run_script("window.materials = [ new THREE.MeshBasicMaterial({ color:0xff0000, ambient: 0xff0000, side:THREE.DoubleSide, wireframe:true }) ];");
-	emscripten_run_script("window.points = [];");
+	emscripten_run_script("__tmp_recastjs_data = [];");
 
 	for (int i = 0; i < m_pmesh->npolys; ++i)
 	{
-		if (true) // || m_pmesh->areas[i] == SAMPLE_POLYAREA_GROUND)
+		if (m_pmesh->areas[i] == SAMPLE_POLYAREA_GROUND)
         {
 			const unsigned short* p = &m_pmesh->polys[i*nvp*2];
 
@@ -240,11 +241,6 @@ void iterateOnNavMesh(){
 				vi[1] = p[j-1];
 				vi[2] = p[j];
 
-				// emscripten_debugger();
-
-				// sprintf(buff, "vi = { x:%u, y:%u, z:%u }", vi[0], vi[1], vi[2]);
-				// emscripten_log(buff);
-
 				for (int k = 0; k < 3; ++k)
 				{
 					const unsigned short* v = &m_pmesh->verts[vi[k]*3];
@@ -252,33 +248,172 @@ void iterateOnNavMesh(){
 					const float y = orig[1] + (v[1]+1)*ch;
 					const float z = orig[2] + v[2]*cs;
 
-					sprintf(buff, "window.points.push(new THREE.Vector3(%f, %f, %f));", x, y, z);
+					sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", x, y, z);
 					emscripten_run_script(buff);
-
-					nIndex += 3;
 				}
 			}
 		}
 	}
-	emscripten_log("window.points.length, ' vertices'", false);
-	emscripten_run_script("Config.navMeshVertices = window.points.length;");
 
-	emscripten_run_script("if (window.navigationMesh) scene.remove(window.navigationMesh);");
-	emscripten_run_script("if (window.points.length < 70) { window.navigationMesh = THREE.SceneUtils.createMultiMaterialObject(new THREE.ConvexGeometry(window.points), window.materials); } else throw \"HUUMM..NO.. too much vertices, ComplexGeometry will take too long, sorry.\"");		
-
-	emscripten_run_script("scene.add(window.navigationMesh);");
-	emscripten_log("window.navigationMesh", false);
+	sprintf(buff, "%s(__tmp_recastjs_data);", callback.c_str());
+	emscripten_run_script(buff);
 }
 
-int getMaxTiles(){
-	return m_navMesh->getMaxTiles();
-}
+void getNavHeightfieldRegions(std::string callback)
+{
+	const float cs = m_chf->cs;
+	const float ch = m_chf->ch;
 
-void drawNavMeshTiles(){
-	for (int i = 0; i < m_navMesh->getMaxTiles(); ++i)
+	char buff[512];
+
+	sprintf(buff, "cs=%f, ch=%f", cs, ch);
+	emscripten_log(buff);
+	emscripten_run_script("__tmp_recastjs_data = [];");
+
+	for (int y = 0; y < m_chf->height; ++y)
 	{
-		//dtMeshTile* tile = m_navMesh->getTile(i);
+		for (int x = 0; x < m_chf->width; ++x)
+		{
+			const float fx = m_chf->bmin[0] + x*cs;
+			const float fz = m_chf->bmin[2] + y*cs;
+			const rcCompactCell& c = m_chf->cells[x+y*m_chf->width];
+			
+			for (unsigned i = c.index, ni = c.index+c.count; i < ni; ++i)
+			{
+				const rcCompactSpan& s = m_chf->spans[i];
+				const float fy = m_chf->bmin[1] + (s.y)*ch;
+				unsigned int color;
+				if (s.reg)
+					color = duIntToCol(s.reg, 192);
+				else
+					color = duRGBA(0,0,0,64);
+
+				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", fx, fy, fz);      emscripten_run_script(buff);
+				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", fx, fy, fz+cs);   emscripten_run_script(buff);
+				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", fx+cs, fy, fz+cs);emscripten_run_script(buff);
+				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", fx+cs, fy, fz);   emscripten_run_script(buff);
+			}
+		}
 	}
+	
+	sprintf(buff, "%s(__tmp_recastjs_data);", callback.c_str());
+	emscripten_run_script(buff);
+}
+
+void findNearestPoly(float cx, float cy, float cz,
+					float ex, float ey, float ez,
+					 /*const dtQueryFilter* filter,
+					 dtPolyRef* nearestRef, float* nearestPt*/
+					std::string callback)
+{
+	emscripten_run_script("__tmp_recastjs_data = [];");
+	char buff[512];
+
+	const float p[3] = {cx,cy,cz};
+	const float ext[3] = {ex,ey,ez};
+	float nearestPt[3];
+
+	dtQueryFilter filter;
+	filter.setIncludeFlags(3);
+	filter.setExcludeFlags(0);
+
+	dtPolyRef ref = 0;
+
+	dtStatus findStatus = m_navQuery->findNearestPoly(p, ext, &filter, &ref, 0);
+
+	if (dtStatusFailed(findStatus)) {
+		printf("Cannot find nearestPoly: %u\n", findStatus);
+
+	} else {
+
+		const dtMeshTile* tile;
+		const dtPoly* poly;
+		findStatus = m_navMesh->getTileAndPolyByRef(ref, &tile, &poly);
+
+		if (dtStatusFailed(findStatus)) {
+			printf("Cannot get tile and poly by ref #%u : %u \n", ref, findStatus);
+
+		} else {
+			// TODO: put poly and tile in __tmp_recastjs_data
+
+			for (int i = 0; i < tile->header->vertCount; i++) {
+				float* v = &tile->verts[i];
+
+				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
+				emscripten_run_script(buff);
+			}	
+		}
+	}
+
+	sprintf(buff, "%s(__tmp_recastjs_data);", callback.c_str());
+	emscripten_run_script(buff);
+}
+
+void findPath(float startPosX, float startPosY, float startPosZ,
+				float endPosX, float endPosY, float endPosZ, int maxPath,
+				std::string callback)
+{
+	emscripten_run_script("__tmp_recastjs_data = [];");
+	char buff[512];
+
+	float startPos[3] = { startPosX, startPosY, startPosZ };
+	float endPos[3] = { endPosX, endPosY, endPosZ };
+
+	const float ext[3] = {2,4,2};
+
+	dtStatus findStatus;
+
+	dtPolyRef path[maxPath+1];
+	int pathCount;
+
+	dtQueryFilter filter;
+	filter.setIncludeFlags(3);
+	filter.setExcludeFlags(0);
+
+	float nearestStartPos[3];
+	dtPolyRef startRef = 0;
+	m_navQuery->findNearestPoly(startPos, ext, &filter, &startRef, nearestStartPos);
+
+	float nearestEndPos[3];
+	dtPolyRef endRef = 0;
+	m_navQuery->findNearestPoly(endPos, ext, &filter, &endRef, nearestEndPos);
+
+	printf("Use %u , %u as start / end polyRefs \n", startRef, endRef);
+
+	findStatus = m_navQuery->findPath(startRef, endRef, nearestStartPos, nearestEndPos, &filter, path, &pathCount, maxPath);
+
+	if (dtStatusFailed(findStatus)) {
+		printf("Cannot find nearestPoly: %u\n", findStatus);
+
+	} else {
+		printf("Found a %u steps path \n", pathCount);
+
+		const dtMeshTile* tile;
+		const dtPoly* poly;
+
+		for (int i = 0; i < pathCount; i++) {
+			sprintf(buff, "__tmp_recastjs_data[%u] = [];", path[i]);
+			emscripten_run_script(buff);
+			findStatus = m_navMesh->getTileAndPolyByRef(path[i], &tile, &poly);
+
+			// sprintf(buff, "__tmp_recastjs_data[%u].push({ vertCount:%u, polyCount:%u, detailTriCount:%u , detailVertCount:%u });", path[i], tile->header->vertCount, tile->header->polyCount, tile->header->detailTriCount, tile->header->detailVertCount);
+			// emscripten_run_script(buff);
+
+			for (int j = 0; j < tile->header->vertCount; j=j+3) {
+				float* v1 = &tile->verts[j];
+				float* v2 = &tile->verts[j+1];
+				float* v3 = &tile->verts[j+2];
+
+				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
+
+				sprintf(buff, "__tmp_recastjs_data[%u].push([ new THREE.Vector3(%f, %f, %f), new THREE.Vector3(%f, %f, %f), new THREE.Vector3(%f, %f, %f) ]);", path[i], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
+				emscripten_run_script(buff);
+			}
+		}
+	}
+
+	sprintf(buff, "%s(__tmp_recastjs_data);", callback.c_str());
+	emscripten_run_script(buff);
 }
 
 void set_cellSize(float val){				m_cellSize = val;				}
@@ -577,7 +712,9 @@ bool build()
 		unsigned char* navData = 0;
 		int navDataSize = 0;
 
-		printf("%u poly areas \n", m_pmesh->npolys);
+		char buff[512];
+		sprintf(buff, "Config.detailMeshPoly = %u;", m_pmesh->npolys);
+		emscripten_run_script(buff);
 
 		// Update poly flags from areas.
 		for (int i = 0; i < m_pmesh->npolys; ++i)
@@ -634,7 +771,7 @@ bool build()
 		params.ch = m_cfg.ch;
 		params.buildBvTree = true;
 
-		printf("Get NavMeshCreateParams %p \n", params);
+		printf("dtNavMeshCreateParams %p \n", params);
 		
 		if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
 		{
@@ -660,15 +797,18 @@ bool build()
 		if (dtStatusFailed(status))
 		{
 			dtFree(navData);
+			printf("Could not init Detour navmesh (%u) \n", status);
 			m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh");
 			return false;
 		}
 		
 		printf("Init Detour navmesh. %p \n", navData);
 
+		m_navQuery = dtAllocNavMeshQuery();
 		status = m_navQuery->init(m_navMesh, 2048);
 		if (dtStatusFailed(status))
 		{
+			printf("Could not init Detour navmesh query (%u) \n", status);
 			m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh query");
 			return false;
 		}
@@ -676,6 +816,8 @@ bool build()
 
 	printf("m_navMesh=%p \n", m_navMesh);
 	
+	printf("m_navQuery=%p \n", m_navQuery);
+
 	//m_ctx->stopTimer(RC_TIMER_TOTAL);
 
 	// Show performance stats.
@@ -704,7 +846,11 @@ EMSCRIPTEN_BINDINGS(my_module) {
 	function("bareGeomAddTriangle", &bareGeomAddTriangle);
 	function("bareGeomValidate", &bareGeomValidate);
 
-	function("iterateOnNavMesh", &iterateOnNavMesh);
+	function("getNavMeshVertices", &getNavMeshVertices);
+	function("getNavHeightfieldRegions", &getNavHeightfieldRegions);
+
+	function("findNearestPoly", &findNearestPoly);
+	function("findPath", &findPath);
 
 	function("set_cellSize", &set_cellSize);
 	function("set_cellHeight", &set_cellHeight);
@@ -719,7 +865,5 @@ EMSCRIPTEN_BINDINGS(my_module) {
 	function("set_vertsPerPoly", &set_vertsPerPoly);
 	function("set_detailSampleDist", &set_detailSampleDist);
 	function("set_detailSampleMaxError", &set_detailSampleMaxError);
-
-	function("getMaxTiles", &getMaxTiles);
 
 }

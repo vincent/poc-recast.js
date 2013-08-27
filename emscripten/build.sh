@@ -1,7 +1,7 @@
 #!/bin/sh
  
 export CC='/Users/vincent/Workspace/emscripten/emcc'
-export CFLAGS='--closure 0 -s LINKABLE=0 --bind'
+export CFLAGS='--closure 0 -O2 -g -s LINKABLE=0 --bind'
 export DEFINES='-D NOT_GCC -D EMSCRIPTEN -D USES_UNIX_DIR'
 export INCLUDES='-I ../src_cpp/Recast/Include 			
 				 -I ../src_cpp/Detour/Include 			
