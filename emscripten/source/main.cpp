@@ -392,22 +392,23 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 		const dtPoly* poly;
 
 		for (int i = 0; i < pathCount; i++) {
-			sprintf(buff, "__tmp_recastjs_data[%u] = [];", path[i]);
-			emscripten_run_script(buff);
 			findStatus = m_navMesh->getTileAndPolyByRef(path[i], &tile, &poly);
 
-			// sprintf(buff, "__tmp_recastjs_data[%u].push({ vertCount:%u, polyCount:%u, detailTriCount:%u , detailVertCount:%u });", path[i], tile->header->vertCount, tile->header->polyCount, tile->header->detailTriCount, tile->header->detailVertCount);
-			// emscripten_run_script(buff);
+			if (dtStatusFailed(findStatus)) {
+				printf("Cannot getTileAndPolyByRef: %u\n", findStatus);
 
-			for (int j = 0; j < tile->header->vertCount; j=j+3) {
-				float* v1 = &tile->verts[j];
-				float* v2 = &tile->verts[j+1];
-				float* v3 = &tile->verts[j+2];
+			} else {
+				// sprintf(buff, "__tmp_recastjs_data[%u].push({ vertCount:%u, polyCount:%u, detailTriCount:%u , detailVertCount:%u });", path[i], tile->header->vertCount, tile->header->polyCount, tile->header->detailTriCount, tile->header->detailVertCount);
+				// emscripten_run_script(buff);
 
-				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
+				for (int j = 0; j < (int)poly->vertCount; ++j)
+				{
+					const float* v = &tile->verts[poly->verts[j]*3];
+					// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
 
-				sprintf(buff, "__tmp_recastjs_data[%u].push([ new THREE.Vector3(%f, %f, %f), new THREE.Vector3(%f, %f, %f), new THREE.Vector3(%f, %f, %f) ]);", path[i], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
-				emscripten_run_script(buff);
+					sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
+					emscripten_run_script(buff);
+				}
 			}
 		}
 	}

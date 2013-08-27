@@ -448,28 +448,21 @@
 			};
 
 			window.__drawPath = function(polys) {
-				if (window._start_poly) {
-					scene.remove(window._start_poly);
+				if (window.__path) {
+					scene.remove(window.__path);
 				}
 
-				window._start_poly = new THREE.Object3D();
+				window.__path = meshFromVertices(polys, {
+					color: 0x0000ff,
+					ambient: 0x0000ff,
+					side: THREE.DoubleSide,
+					wireframe: false,
+					transparent: true,
+					opacity: 0.5
+				});
 
-				for (p in polys) {
-					for (pp in polys[p]) {
-						var v = meshFromVertices(polys[p][pp], {
-							color: 0x00ff00,
-							ambient: 0x00ff00,
-							side: THREE.DoubleSide,
-							wireframe: true,
-							transparent: true,
-							opacity: 0.5
-						});
-						window._start_poly.add(v);
-					}
-				}
-
-				if (window._start_poly) {
-					scene.add(window._start_poly);
+				if (window.__path) {
+					scene.add(window.__path);
 				}
 			};
 			//
