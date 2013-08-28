@@ -419,10 +419,9 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 	} else {
 		printf("Found a %u polysteps path \n", pathCount);
 
-		const int MAX_STEER_POINTS = 3;
-		float straightPath[MAX_STEER_POINTS*3];
-		unsigned char straightPathFlags[MAX_STEER_POINTS];
-		dtPolyRef straightPathRefs[MAX_STEER_POINTS];
+		float straightPath[maxPath*3];
+		unsigned char straightPathFlags[maxPath];
+		dtPolyRef straightPathRefs[maxPath];
 		int straightPathCount = 0;
 
 		int maxStraightPath = maxPath;
@@ -449,7 +448,7 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 		} else {
 			printf("Found a %u steps path \n", straightPathCount);
 
-			for (int i = 0; i < straightPathCount; i++) {
+			for (int i = 0; i < straightPathCount; ++i) {
 				const float* v = &straightPath[i*3];
 				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
 

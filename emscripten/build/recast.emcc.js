@@ -3826,6 +3826,20 @@ function copyTempDouble(ptr) {
   function _emscripten_run_script(ptr) {
       eval(Pointer_stringify(ptr));
     }
+  function _llvm_stacksave() {
+      var self = _llvm_stacksave;
+      if (!self.LLVM_SAVEDSTACKS) {
+        self.LLVM_SAVEDSTACKS = [];
+      }
+      self.LLVM_SAVEDSTACKS.push(Runtime.stackSave());
+      return self.LLVM_SAVEDSTACKS.length-1;
+    }
+  function _llvm_stackrestore(p) {
+      var self = _llvm_stacksave;
+      var ret = self.LLVM_SAVEDSTACKS[p];
+      self.LLVM_SAVEDSTACKS.splice(p, 1);
+      Runtime.stackRestore(ret);
+    }
 ;
 ;
   function _strdup(ptr) {
@@ -27316,7 +27330,7 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
  var label = 0;
  var tempVarArgs = 0;
  var sp = STACKTOP;
- STACKTOP = STACKTOP + 2032 | 0;
+ STACKTOP = STACKTOP + 1968 | 0;
  var $closestStartPos_i = sp;
  var $closestEndPos_i = sp + 16;
  var $portalApex_i = sp + 32;
@@ -27331,10 +27345,7 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
  var $startRef = sp + 1928;
  var $nearestEndPos = sp + 1936;
  var $endRef = sp + 1952;
- var $straightPath = sp + 1960;
- var $straightPathFlags = sp + 2e3;
- var $straightPathRefs = sp + 2008;
- var $straightPathCount = sp + 2024;
+ var $straightPathCount = sp + 1960;
  _emscripten_run_script(5968);
  var $1 = $startPos | 0;
  HEAPF32[$1 >> 2] = $startPosX;
@@ -27966,74 +27977,81 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
    var $pathCount_052;
    _printf(4936, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $pathCount_052, tempVarArgs));
    STACKTOP = tempVarArgs;
-   var $521 = HEAP32[17760 >> 2];
-   var $522 = $straightPath | 0;
-   var $523 = $straightPathFlags | 0;
-   var $524 = $straightPathRefs | 0;
+   var $522 = _llvm_stacksave();
+   var $523 = STACKTOP;
+   STACKTOP = STACKTOP + (($maxPath * 3 & -1) * 4 & -1) | 0;
+   STACKTOP = STACKTOP + 7 >> 3 << 3;
+   var $524 = STACKTOP;
+   STACKTOP = STACKTOP + $maxPath | 0;
+   STACKTOP = STACKTOP + 7 >> 3 << 3;
+   var $525 = STACKTOP;
+   STACKTOP = STACKTOP + ($maxPath * 4 & -1) | 0;
+   STACKTOP = STACKTOP + 7 >> 3 << 3;
+   var $526 = HEAP32[17760 >> 2];
    HEAP32[$straightPathCount >> 2] = 0;
    L1245 : do {
     if ($28) {
      var $_0_i = -2147483640;
     } else {
-     var $531 = HEAP32[$8 >> 2];
-     if (($531 | 0) == 0) {
+     var $533 = HEAP32[$8 >> 2];
+     if (($533 | 0) == 0) {
       var $_0_i = -2147483640;
       break;
      }
-     var $534 = $closestStartPos_i | 0;
-     var $_idx7 = $521 | 0;
-     if ((__ZNK14dtNavMeshQuery26closestPointOnPolyBoundaryEjPKfPf(HEAP32[$_idx7 >> 2], $531, $16, $534) | 0) < 0) {
+     var $536 = $closestStartPos_i | 0;
+     var $_idx7 = $526 | 0;
+     if ((__ZNK14dtNavMeshQuery26closestPointOnPolyBoundaryEjPKfPf(HEAP32[$_idx7 >> 2], $533, $16, $536) | 0) < 0) {
       var $_0_i = -2147483640;
       break;
      }
-     var $541 = $closestEndPos_i | 0;
-     if ((__ZNK14dtNavMeshQuery26closestPointOnPolyBoundaryEjPKfPf(HEAP32[$_idx7 >> 2], HEAP32[$8 + ($pathCount_052 - 1 << 2) >> 2], $18, $541) | 0) < 0) {
+     var $543 = $closestEndPos_i | 0;
+     if ((__ZNK14dtNavMeshQuery26closestPointOnPolyBoundaryEjPKfPf(HEAP32[$_idx7 >> 2], HEAP32[$8 + ($pathCount_052 - 1 << 2) >> 2], $18, $543) | 0) < 0) {
       var $_0_i = -2147483640;
       break;
      }
-     var $545 = __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($534, 1, $531, $522, $523, $524, $straightPathCount, $maxPath);
-     if (($545 | 0) != 536870912) {
-      var $_0_i = $545;
+     var $547 = __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($536, 1, $533, $523, $524, $525, $straightPathCount, $maxPath);
+     if (($547 | 0) != 536870912) {
+      var $_0_i = $547;
       break;
      }
      L1251 : do {
       if (($pathCount_052 | 0) > 1) {
-       var $549 = $portalApex_i | 0;
-       var $550 = HEAPF32[$534 >> 2];
-       HEAPF32[$549 >> 2] = $550;
-       var $552 = HEAPF32[$closestStartPos_i + 4 >> 2];
-       var $553 = $portalApex_i + 4 | 0;
-       HEAPF32[$553 >> 2] = $552;
-       var $555 = HEAPF32[$closestStartPos_i + 8 >> 2];
-       var $556 = $portalApex_i + 8 | 0;
-       HEAPF32[$556 >> 2] = $555;
-       var $557 = $left_i | 0;
-       var $558 = $right_i | 0;
-       var $559 = $right_i + 8 | 0;
-       var $560 = $left_i + 8 | 0;
-       var $561 = $left_i + 4 | 0;
-       var $562 = $right_i + 4 | 0;
-       var $563 = $closestEndPos_i + 4 | 0;
-       var $564 = $closestEndPos_i + 8 | 0;
-       var $568 = 0;
+       var $551 = $portalApex_i | 0;
+       var $552 = HEAPF32[$536 >> 2];
+       HEAPF32[$551 >> 2] = $552;
+       var $554 = HEAPF32[$closestStartPos_i + 4 >> 2];
+       var $555 = $portalApex_i + 4 | 0;
+       HEAPF32[$555 >> 2] = $554;
+       var $557 = HEAPF32[$closestStartPos_i + 8 >> 2];
+       var $558 = $portalApex_i + 8 | 0;
+       HEAPF32[$558 >> 2] = $557;
+       var $559 = $left_i | 0;
+       var $560 = $right_i | 0;
+       var $561 = $right_i + 8 | 0;
+       var $562 = $left_i + 8 | 0;
+       var $563 = $left_i + 4 | 0;
+       var $564 = $right_i + 4 | 0;
+       var $565 = $closestEndPos_i + 4 | 0;
+       var $566 = $closestEndPos_i + 8 | 0;
+       var $570 = 0;
        var $leftIndex_0133_i = 0;
        var $rightIndex_0135_i = 0;
        var $leftPolyType_0137_i = 0;
        var $rightPolyType_0139_i = 0;
-       var $leftPolyRef_0140_i = $531;
-       var $rightPolyRef_0142_i = $531;
+       var $leftPolyRef_0140_i = $533;
+       var $rightPolyRef_0142_i = $533;
        var $i_0143_i = 0;
-       var $portalRight_i_sroa_0_0 = $550;
-       var $portalRight_i_sroa_1_0 = $552;
-       var $portalRight_i_sroa_2_0 = $555;
-       var $portalLeft_i_sroa_0_0 = $550;
-       var $portalLeft_i_sroa_1_0 = $552;
-       var $portalLeft_i_sroa_2_0 = $555;
-       var $567 = $550;
-       var $566 = $555;
+       var $portalRight_i_sroa_0_0 = $552;
+       var $portalRight_i_sroa_1_0 = $554;
+       var $portalRight_i_sroa_2_0 = $557;
+       var $portalLeft_i_sroa_0_0 = $552;
+       var $portalLeft_i_sroa_1_0 = $554;
+       var $portalLeft_i_sroa_2_0 = $557;
+       var $569 = $552;
+       var $568 = $557;
        L1253 : while (1) {
-        var $566;
-        var $567;
+        var $568;
+        var $569;
         var $portalLeft_i_sroa_2_0;
         var $portalLeft_i_sroa_1_0;
         var $portalLeft_i_sroa_0_0;
@@ -28047,101 +28065,101 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
         var $leftPolyType_0137_i;
         var $rightIndex_0135_i;
         var $leftIndex_0133_i;
-        var $568;
-        var $569 = $i_0143_i + 1 | 0;
-        var $570 = ($569 | 0) < ($pathCount_052 | 0);
+        var $570;
+        var $571 = $i_0143_i + 1 | 0;
+        var $572 = ($571 | 0) < ($pathCount_052 | 0);
         do {
-         if ($570) {
-          var $573 = HEAP32[$8 + ($i_0143_i << 2) >> 2];
-          var $575 = HEAP32[$8 + ($569 << 2) >> 2];
-          var $576 = HEAP32[$_idx7 >> 2];
-          if (($573 | 0) == 0) {
-           break L1253;
-          }
-          var $580 = HEAP32[$576 + 76 >> 2];
-          var $582 = (1 << $580) - 1 | 0;
-          var $584 = HEAP32[$576 + 80 >> 2];
-          var $586 = (1 << $584) - 1 | 0;
-          var $588 = $573 >>> ($584 >>> 0) & $582;
-          var $589 = $586 & $573;
-          var $591 = HEAP32[$576 + 48 >> 2];
-          if ($588 >>> 0 >= $591 >>> 0) {
-           break L1253;
-          }
-          var $596 = $584 + $580 | 0;
-          var $599 = (1 << HEAP32[$576 + 72 >> 2]) - 1 | 0;
-          var $602 = HEAP32[$576 + 68 >> 2];
-          var $603 = $602 + ($588 * 60 & -1) | 0;
-          if ((HEAP32[$603 >> 2] | 0) != ($599 & $573 >>> ($596 >>> 0) | 0)) {
-           break L1253;
-          }
-          var $609 = HEAP32[$602 + ($588 * 60 & -1) + 8 >> 2];
-          if (($609 | 0) == 0) {
-           break L1253;
-          }
-          if ($589 >>> 0 >= HEAP32[$609 + 24 >> 2] >>> 0) {
-           break L1253;
-          }
+         if ($572) {
+          var $575 = HEAP32[$8 + ($i_0143_i << 2) >> 2];
+          var $577 = HEAP32[$8 + ($571 << 2) >> 2];
+          var $578 = HEAP32[$_idx7 >> 2];
           if (($575 | 0) == 0) {
            break L1253;
           }
-          var $622 = $575 >>> ($584 >>> 0) & $582;
-          var $623 = $586 & $575;
-          if ($622 >>> 0 >= $591 >>> 0) {
+          var $582 = HEAP32[$578 + 76 >> 2];
+          var $584 = (1 << $582) - 1 | 0;
+          var $586 = HEAP32[$578 + 80 >> 2];
+          var $588 = (1 << $586) - 1 | 0;
+          var $590 = $575 >>> ($586 >>> 0) & $584;
+          var $591 = $588 & $575;
+          var $593 = HEAP32[$578 + 48 >> 2];
+          if ($590 >>> 0 >= $593 >>> 0) {
            break L1253;
           }
-          var $628 = $602 + ($622 * 60 & -1) | 0;
-          if ((HEAP32[$628 >> 2] | 0) != ($599 & $575 >>> ($596 >>> 0) | 0)) {
+          var $598 = $586 + $582 | 0;
+          var $601 = (1 << HEAP32[$578 + 72 >> 2]) - 1 | 0;
+          var $604 = HEAP32[$578 + 68 >> 2];
+          var $605 = $604 + ($590 * 60 & -1) | 0;
+          if ((HEAP32[$605 >> 2] | 0) != ($601 & $575 >>> ($598 >>> 0) | 0)) {
            break L1253;
           }
-          var $634 = HEAP32[$602 + ($622 * 60 & -1) + 8 >> 2];
-          if (($634 | 0) == 0) {
+          var $611 = HEAP32[$604 + ($590 * 60 & -1) + 8 >> 2];
+          if (($611 | 0) == 0) {
            break L1253;
           }
-          if ($623 >>> 0 >= HEAP32[$634 + 24 >> 2] >>> 0) {
+          if ($591 >>> 0 >= HEAP32[$611 + 24 >> 2] >>> 0) {
            break L1253;
           }
-          var $641 = HEAP32[$602 + ($622 * 60 & -1) + 12 >> 2];
-          var $645 = HEAPU8[$641 + ($623 << 5) + 31 | 0] >>> 6;
-          if ((__ZNK14dtNavMeshQuery15getPortalPointsEjPK6dtPolyPK10dtMeshTilejS2_S5_PfS6_($573, HEAP32[$602 + ($588 * 60 & -1) + 12 >> 2] + ($589 << 5) | 0, $603, $575, $641 + ($623 << 5) | 0, $628, $557, $558) | 0) < 0) {
+          if (($577 | 0) == 0) {
            break L1253;
           }
-          var $656 = HEAPF32[$558 >> 2];
+          var $624 = $577 >>> ($586 >>> 0) & $584;
+          var $625 = $588 & $577;
+          if ($624 >>> 0 >= $593 >>> 0) {
+           break L1253;
+          }
+          var $630 = $604 + ($624 * 60 & -1) | 0;
+          if ((HEAP32[$630 >> 2] | 0) != ($601 & $577 >>> ($598 >>> 0) | 0)) {
+           break L1253;
+          }
+          var $636 = HEAP32[$604 + ($624 * 60 & -1) + 8 >> 2];
+          if (($636 | 0) == 0) {
+           break L1253;
+          }
+          if ($625 >>> 0 >= HEAP32[$636 + 24 >> 2] >>> 0) {
+           break L1253;
+          }
+          var $643 = HEAP32[$604 + ($624 * 60 & -1) + 12 >> 2];
+          var $647 = HEAPU8[$643 + ($625 << 5) + 31 | 0] >>> 6;
+          if ((__ZNK14dtNavMeshQuery15getPortalPointsEjPK6dtPolyPK10dtMeshTilejS2_S5_PfS6_($575, HEAP32[$604 + ($590 * 60 & -1) + 12 >> 2] + ($591 << 5) | 0, $605, $577, $643 + ($625 << 5) | 0, $630, $559, $560) | 0) < 0) {
+           break L1253;
+          }
+          var $658 = HEAPF32[$560 >> 2];
           if (($i_0143_i | 0) != 0) {
-           var $696 = $645;
-           var $695 = $656;
-           var $694 = HEAPF32[$559 >> 2];
+           var $698 = $647;
+           var $697 = $658;
+           var $696 = HEAPF32[$561 >> 2];
            label = 973;
            break;
           }
-          var $658 = HEAPF32[$557 >> 2];
-          var $659 = $656 - $658;
           var $660 = HEAPF32[$559 >> 2];
-          var $661 = HEAPF32[$560 >> 2];
-          var $662 = $660 - $661;
-          var $667 = $659 * $659 + $662 * $662;
-          var $670 = $659 * ($567 - $658) + $662 * ($566 - $661);
-          if ($667 > 0) {
-           var $storemerge_i_i = $670 / $667;
+          var $661 = $658 - $660;
+          var $662 = HEAPF32[$561 >> 2];
+          var $663 = HEAPF32[$562 >> 2];
+          var $664 = $662 - $663;
+          var $669 = $661 * $661 + $664 * $664;
+          var $672 = $661 * ($569 - $660) + $664 * ($568 - $663);
+          if ($669 > 0) {
+           var $storemerge_i_i = $672 / $669;
           } else {
-           var $storemerge_i_i = $670;
+           var $storemerge_i_i = $672;
           }
           var $storemerge_i_i;
           do {
            if ($storemerge_i_i < 0) {
-            var $679 = 0;
+            var $681 = 0;
            } else {
             if ($storemerge_i_i <= 1) {
-             var $679 = $storemerge_i_i;
+             var $681 = $storemerge_i_i;
              break;
             }
-            var $679 = 1;
+            var $681 = 1;
            }
           } while (0);
-          var $679;
-          var $682 = $658 + $659 * $679 - $567;
-          var $685 = $662 * $679 + $661 - $566;
-          if ($682 * $682 + $685 * $685 < 10000001111620804e-22) {
+          var $681;
+          var $684 = $660 + $661 * $681 - $569;
+          var $687 = $664 * $681 + $663 - $568;
+          if ($684 * $684 + $687 * $687 < 10000001111620804e-22) {
            var $i_1_i = 0;
            var $rightPolyRef_2_i = $rightPolyRef_0142_i;
            var $leftPolyRef_1_i = $leftPolyRef_0140_i;
@@ -28149,50 +28167,50 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
            var $leftPolyType_1_i = $leftPolyType_0137_i;
            var $rightIndex_2_i = $rightIndex_0135_i;
            var $leftIndex_1_i = $leftIndex_0133_i;
-           var $818 = $645;
+           var $820 = $647;
            var $portalRight_i_sroa_0_2 = $portalRight_i_sroa_0_0;
            var $portalRight_i_sroa_1_2 = $portalRight_i_sroa_1_0;
            var $portalRight_i_sroa_2_2 = $portalRight_i_sroa_2_0;
            var $portalLeft_i_sroa_0_1 = $portalLeft_i_sroa_0_0;
            var $portalLeft_i_sroa_1_1 = $portalLeft_i_sroa_1_0;
            var $portalLeft_i_sroa_2_1 = $portalLeft_i_sroa_2_0;
-           var $817 = $567;
-           var $816 = $566;
+           var $819 = $569;
+           var $818 = $568;
           } else {
-           var $696 = $645;
-           var $695 = $656;
-           var $694 = $660;
+           var $698 = $647;
+           var $697 = $658;
+           var $696 = $662;
            label = 973;
           }
          } else {
-          var $691 = HEAPF32[$541 >> 2];
-          HEAPF32[$557 >> 2] = $691;
-          var $692 = HEAPF32[$563 >> 2];
-          HEAPF32[$561 >> 2] = $692;
-          var $693 = HEAPF32[$564 >> 2];
-          HEAPF32[$560 >> 2] = $693;
-          HEAPF32[$558 >> 2] = $691;
-          HEAPF32[$562 >> 2] = $692;
+          var $693 = HEAPF32[$543 >> 2];
           HEAPF32[$559 >> 2] = $693;
-          var $696 = 0;
-          var $695 = $691;
-          var $694 = $693;
+          var $694 = HEAPF32[$565 >> 2];
+          HEAPF32[$563 >> 2] = $694;
+          var $695 = HEAPF32[$566 >> 2];
+          HEAPF32[$562 >> 2] = $695;
+          HEAPF32[$560 >> 2] = $693;
+          HEAPF32[$564 >> 2] = $694;
+          HEAPF32[$561 >> 2] = $695;
+          var $698 = 0;
+          var $697 = $693;
+          var $696 = $695;
           label = 973;
          }
         } while (0);
         L1279 : do {
          if (label == 973) {
           label = 0;
-          var $694;
-          var $695;
           var $696;
+          var $697;
+          var $698;
           do {
-           if (($portalRight_i_sroa_2_0 - $566) * ($695 - $567) - ($portalRight_i_sroa_0_0 - $567) * ($694 - $566) > 0) {
+           if (($portalRight_i_sroa_2_0 - $568) * ($697 - $569) - ($portalRight_i_sroa_0_0 - $569) * ($696 - $568) > 0) {
             var $rightPolyRef_1_i = $rightPolyRef_0142_i;
             var $rightPolyType_1_i = $rightPolyType_0139_i;
             var $rightIndex_1_i = $rightIndex_0135_i;
-            var $755 = $567;
-            var $754 = $566;
+            var $757 = $569;
+            var $756 = $568;
             var $portalRight_i_sroa_0_1 = $portalRight_i_sroa_0_0;
             var $portalRight_i_sroa_1_1 = $portalRight_i_sroa_1_0;
             var $portalRight_i_sroa_2_1 = $portalRight_i_sroa_2_0;
@@ -28205,40 +28223,40 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
               HEAPF32[9688 >> 2] = 3.725290298461914e-9;
              }
             } while (0);
-            var $712 = HEAPF32[$549 >> 2];
-            var $713 = $portalRight_i_sroa_0_0 - $712;
-            var $715 = $portalRight_i_sroa_1_0 - HEAPF32[$553 >> 2];
-            var $716 = HEAPF32[$556 >> 2];
-            var $717 = $portalRight_i_sroa_2_0 - $716;
+            var $714 = HEAPF32[$551 >> 2];
+            var $715 = $portalRight_i_sroa_0_0 - $714;
+            var $717 = $portalRight_i_sroa_1_0 - HEAPF32[$555 >> 2];
+            var $718 = HEAPF32[$558 >> 2];
+            var $719 = $portalRight_i_sroa_2_0 - $718;
             do {
-             if ($713 * $713 + $715 * $715 + $717 * $717 < HEAPF32[9688 >> 2]) {
-              var $738 = HEAPF32[$558 >> 2];
-              var $737 = HEAPF32[$559 >> 2];
+             if ($715 * $715 + $717 * $717 + $719 * $719 < HEAPF32[9688 >> 2]) {
+              var $740 = HEAPF32[$560 >> 2];
+              var $739 = HEAPF32[$561 >> 2];
              } else {
-              var $728 = HEAPF32[$558 >> 2];
-              var $730 = HEAPF32[$559 >> 2];
-              if (($portalLeft_i_sroa_2_0 - $716) * ($728 - $712) - ($portalLeft_i_sroa_0_0 - $712) * ($730 - $716) > 0) {
-               var $738 = $728;
-               var $737 = $730;
+              var $730 = HEAPF32[$560 >> 2];
+              var $732 = HEAPF32[$561 >> 2];
+              if (($portalLeft_i_sroa_2_0 - $718) * ($730 - $714) - ($portalLeft_i_sroa_0_0 - $714) * ($732 - $718) > 0) {
+               var $740 = $730;
+               var $739 = $732;
                break;
               }
-              HEAPF32[$549 >> 2] = $portalLeft_i_sroa_0_0;
-              HEAPF32[$553 >> 2] = $portalLeft_i_sroa_1_0;
-              HEAPF32[$556 >> 2] = $portalLeft_i_sroa_2_0;
+              HEAPF32[$551 >> 2] = $portalLeft_i_sroa_0_0;
+              HEAPF32[$555 >> 2] = $portalLeft_i_sroa_1_0;
+              HEAPF32[$558 >> 2] = $portalLeft_i_sroa_2_0;
               if (($leftPolyRef_0140_i | 0) == 0) {
                var $flags_0_i = 2;
               } else {
                var $flags_0_i = $leftPolyType_0137_i << 24 >> 24 == 1 ? 4 : 0;
               }
               var $flags_0_i;
-              var $748 = __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($549, $flags_0_i, $leftPolyRef_0140_i, $522, $523, $524, $straightPathCount, $maxPath);
-              if (($748 | 0) != 536870912) {
-               var $_0_i = $748;
+              var $750 = __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($551, $flags_0_i, $leftPolyRef_0140_i, $523, $524, $525, $straightPathCount, $maxPath);
+              if (($750 | 0) != 536870912) {
+               var $_0_i = $750;
                break L1245;
               }
-              var $751 = HEAPF32[$549 >> 2];
-              var $752 = HEAPF32[$553 >> 2];
-              var $753 = HEAPF32[$556 >> 2];
+              var $753 = HEAPF32[$551 >> 2];
+              var $754 = HEAPF32[$555 >> 2];
+              var $755 = HEAPF32[$558 >> 2];
               var $i_1_i = $leftIndex_0133_i;
               var $rightPolyRef_2_i = $rightPolyRef_0142_i;
               var $leftPolyRef_1_i = $leftPolyRef_0140_i;
@@ -28246,51 +28264,51 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
               var $leftPolyType_1_i = $leftPolyType_0137_i;
               var $rightIndex_2_i = $leftIndex_0133_i;
               var $leftIndex_1_i = $leftIndex_0133_i;
-              var $818 = $696;
-              var $portalRight_i_sroa_0_2 = $751;
-              var $portalRight_i_sroa_1_2 = $752;
-              var $portalRight_i_sroa_2_2 = $753;
-              var $portalLeft_i_sroa_0_1 = $751;
-              var $portalLeft_i_sroa_1_1 = $752;
-              var $portalLeft_i_sroa_2_1 = $753;
-              var $817 = $751;
-              var $816 = $753;
+              var $820 = $698;
+              var $portalRight_i_sroa_0_2 = $753;
+              var $portalRight_i_sroa_1_2 = $754;
+              var $portalRight_i_sroa_2_2 = $755;
+              var $portalLeft_i_sroa_0_1 = $753;
+              var $portalLeft_i_sroa_1_1 = $754;
+              var $portalLeft_i_sroa_2_1 = $755;
+              var $819 = $753;
+              var $818 = $755;
               break L1279;
              }
             } while (0);
-            var $737;
-            var $738;
-            var $739 = HEAPF32[$562 >> 2];
-            if (!$570) {
+            var $739;
+            var $740;
+            var $741 = HEAPF32[$564 >> 2];
+            if (!$572) {
              var $rightPolyRef_1_i = 0;
-             var $rightPolyType_1_i = $696;
+             var $rightPolyType_1_i = $698;
              var $rightIndex_1_i = $i_0143_i;
-             var $755 = $712;
-             var $754 = $716;
-             var $portalRight_i_sroa_0_1 = $738;
-             var $portalRight_i_sroa_1_1 = $739;
-             var $portalRight_i_sroa_2_1 = $737;
+             var $757 = $714;
+             var $756 = $718;
+             var $portalRight_i_sroa_0_1 = $740;
+             var $portalRight_i_sroa_1_1 = $741;
+             var $portalRight_i_sroa_2_1 = $739;
              break;
             }
-            var $rightPolyRef_1_i = HEAP32[$8 + ($569 << 2) >> 2];
-            var $rightPolyType_1_i = $696;
+            var $rightPolyRef_1_i = HEAP32[$8 + ($571 << 2) >> 2];
+            var $rightPolyType_1_i = $698;
             var $rightIndex_1_i = $i_0143_i;
-            var $755 = $712;
-            var $754 = $716;
-            var $portalRight_i_sroa_0_1 = $738;
-            var $portalRight_i_sroa_1_1 = $739;
-            var $portalRight_i_sroa_2_1 = $737;
+            var $757 = $714;
+            var $756 = $718;
+            var $portalRight_i_sroa_0_1 = $740;
+            var $portalRight_i_sroa_1_1 = $741;
+            var $portalRight_i_sroa_2_1 = $739;
            }
           } while (0);
           var $portalRight_i_sroa_2_1;
           var $portalRight_i_sroa_1_1;
           var $portalRight_i_sroa_0_1;
-          var $754;
-          var $755;
+          var $756;
+          var $757;
           var $rightIndex_1_i;
           var $rightPolyType_1_i;
           var $rightPolyRef_1_i;
-          if (($portalLeft_i_sroa_2_0 - $754) * (HEAPF32[$557 >> 2] - $755) - ($portalLeft_i_sroa_0_0 - $755) * (HEAPF32[$560 >> 2] - $754) < 0) {
+          if (($portalLeft_i_sroa_2_0 - $756) * (HEAPF32[$559 >> 2] - $757) - ($portalLeft_i_sroa_0_0 - $757) * (HEAPF32[$562 >> 2] - $756) < 0) {
            var $i_1_i = $i_0143_i;
            var $rightPolyRef_2_i = $rightPolyRef_1_i;
            var $leftPolyRef_1_i = $leftPolyRef_0140_i;
@@ -28298,15 +28316,15 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
            var $leftPolyType_1_i = $leftPolyType_0137_i;
            var $rightIndex_2_i = $rightIndex_1_i;
            var $leftIndex_1_i = $leftIndex_0133_i;
-           var $818 = $696;
+           var $820 = $698;
            var $portalRight_i_sroa_0_2 = $portalRight_i_sroa_0_1;
            var $portalRight_i_sroa_1_2 = $portalRight_i_sroa_1_1;
            var $portalRight_i_sroa_2_2 = $portalRight_i_sroa_2_1;
            var $portalLeft_i_sroa_0_1 = $portalLeft_i_sroa_0_0;
            var $portalLeft_i_sroa_1_1 = $portalLeft_i_sroa_1_0;
            var $portalLeft_i_sroa_2_1 = $portalLeft_i_sroa_2_0;
-           var $817 = $755;
-           var $816 = $754;
+           var $819 = $757;
+           var $818 = $756;
            break;
           }
           do {
@@ -28317,40 +28335,40 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
             HEAPF32[9688 >> 2] = 3.725290298461914e-9;
            }
           } while (0);
-          var $773 = HEAPF32[$549 >> 2];
-          var $774 = $portalLeft_i_sroa_0_0 - $773;
-          var $776 = $portalLeft_i_sroa_1_0 - HEAPF32[$553 >> 2];
-          var $777 = HEAPF32[$556 >> 2];
-          var $778 = $portalLeft_i_sroa_2_0 - $777;
+          var $775 = HEAPF32[$551 >> 2];
+          var $776 = $portalLeft_i_sroa_0_0 - $775;
+          var $778 = $portalLeft_i_sroa_1_0 - HEAPF32[$555 >> 2];
+          var $779 = HEAPF32[$558 >> 2];
+          var $780 = $portalLeft_i_sroa_2_0 - $779;
           do {
-           if ($774 * $774 + $776 * $776 + $778 * $778 < HEAPF32[9688 >> 2]) {
-            var $799 = HEAPF32[$557 >> 2];
-            var $798 = HEAPF32[$560 >> 2];
+           if ($776 * $776 + $778 * $778 + $780 * $780 < HEAPF32[9688 >> 2]) {
+            var $801 = HEAPF32[$559 >> 2];
+            var $800 = HEAPF32[$562 >> 2];
            } else {
-            var $789 = HEAPF32[$557 >> 2];
-            var $791 = HEAPF32[$560 >> 2];
-            if (($portalRight_i_sroa_2_1 - $777) * ($789 - $773) - ($portalRight_i_sroa_0_1 - $773) * ($791 - $777) < 0) {
-             var $799 = $789;
-             var $798 = $791;
+            var $791 = HEAPF32[$559 >> 2];
+            var $793 = HEAPF32[$562 >> 2];
+            if (($portalRight_i_sroa_2_1 - $779) * ($791 - $775) - ($portalRight_i_sroa_0_1 - $775) * ($793 - $779) < 0) {
+             var $801 = $791;
+             var $800 = $793;
              break;
             }
-            HEAPF32[$549 >> 2] = $portalRight_i_sroa_0_1;
-            HEAPF32[$553 >> 2] = $portalRight_i_sroa_1_1;
-            HEAPF32[$556 >> 2] = $portalRight_i_sroa_2_1;
+            HEAPF32[$551 >> 2] = $portalRight_i_sroa_0_1;
+            HEAPF32[$555 >> 2] = $portalRight_i_sroa_1_1;
+            HEAPF32[$558 >> 2] = $portalRight_i_sroa_2_1;
             if (($rightPolyRef_1_i | 0) == 0) {
              var $flags1_0_i = 2;
             } else {
              var $flags1_0_i = $rightPolyType_1_i << 24 >> 24 == 1 ? 4 : 0;
             }
             var $flags1_0_i;
-            var $809 = __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($549, $flags1_0_i, $rightPolyRef_1_i, $522, $523, $524, $straightPathCount, $maxPath);
-            if (($809 | 0) != 536870912) {
-             var $_0_i = $809;
+            var $811 = __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($551, $flags1_0_i, $rightPolyRef_1_i, $523, $524, $525, $straightPathCount, $maxPath);
+            if (($811 | 0) != 536870912) {
+             var $_0_i = $811;
              break L1245;
             }
-            var $812 = HEAPF32[$549 >> 2];
-            var $813 = HEAPF32[$553 >> 2];
-            var $814 = HEAPF32[$556 >> 2];
+            var $814 = HEAPF32[$551 >> 2];
+            var $815 = HEAPF32[$555 >> 2];
+            var $816 = HEAPF32[$558 >> 2];
             var $i_1_i = $rightIndex_1_i;
             var $rightPolyRef_2_i = $rightPolyRef_1_i;
             var $leftPolyRef_1_i = $leftPolyRef_0140_i;
@@ -28358,67 +28376,67 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
             var $leftPolyType_1_i = $leftPolyType_0137_i;
             var $rightIndex_2_i = $rightIndex_1_i;
             var $leftIndex_1_i = $rightIndex_1_i;
-            var $818 = $696;
-            var $portalRight_i_sroa_0_2 = $812;
-            var $portalRight_i_sroa_1_2 = $813;
-            var $portalRight_i_sroa_2_2 = $814;
-            var $portalLeft_i_sroa_0_1 = $812;
-            var $portalLeft_i_sroa_1_1 = $813;
-            var $portalLeft_i_sroa_2_1 = $814;
-            var $817 = $812;
-            var $816 = $814;
+            var $820 = $698;
+            var $portalRight_i_sroa_0_2 = $814;
+            var $portalRight_i_sroa_1_2 = $815;
+            var $portalRight_i_sroa_2_2 = $816;
+            var $portalLeft_i_sroa_0_1 = $814;
+            var $portalLeft_i_sroa_1_1 = $815;
+            var $portalLeft_i_sroa_2_1 = $816;
+            var $819 = $814;
+            var $818 = $816;
             break L1279;
            }
           } while (0);
-          var $798;
-          var $799;
-          var $800 = HEAPF32[$561 >> 2];
-          if (!$570) {
+          var $800;
+          var $801;
+          var $802 = HEAPF32[$563 >> 2];
+          if (!$572) {
            var $i_1_i = $i_0143_i;
            var $rightPolyRef_2_i = $rightPolyRef_1_i;
            var $leftPolyRef_1_i = 0;
            var $rightPolyType_2_i = $rightPolyType_1_i;
-           var $leftPolyType_1_i = $696;
+           var $leftPolyType_1_i = $698;
            var $rightIndex_2_i = $rightIndex_1_i;
            var $leftIndex_1_i = $i_0143_i;
-           var $818 = $696;
+           var $820 = $698;
            var $portalRight_i_sroa_0_2 = $portalRight_i_sroa_0_1;
            var $portalRight_i_sroa_1_2 = $portalRight_i_sroa_1_1;
            var $portalRight_i_sroa_2_2 = $portalRight_i_sroa_2_1;
-           var $portalLeft_i_sroa_0_1 = $799;
-           var $portalLeft_i_sroa_1_1 = $800;
-           var $portalLeft_i_sroa_2_1 = $798;
-           var $817 = $773;
-           var $816 = $777;
+           var $portalLeft_i_sroa_0_1 = $801;
+           var $portalLeft_i_sroa_1_1 = $802;
+           var $portalLeft_i_sroa_2_1 = $800;
+           var $819 = $775;
+           var $818 = $779;
            break;
           }
           var $i_1_i = $i_0143_i;
           var $rightPolyRef_2_i = $rightPolyRef_1_i;
-          var $leftPolyRef_1_i = HEAP32[$8 + ($569 << 2) >> 2];
+          var $leftPolyRef_1_i = HEAP32[$8 + ($571 << 2) >> 2];
           var $rightPolyType_2_i = $rightPolyType_1_i;
-          var $leftPolyType_1_i = $696;
+          var $leftPolyType_1_i = $698;
           var $rightIndex_2_i = $rightIndex_1_i;
           var $leftIndex_1_i = $i_0143_i;
-          var $818 = $696;
+          var $820 = $698;
           var $portalRight_i_sroa_0_2 = $portalRight_i_sroa_0_1;
           var $portalRight_i_sroa_1_2 = $portalRight_i_sroa_1_1;
           var $portalRight_i_sroa_2_2 = $portalRight_i_sroa_2_1;
-          var $portalLeft_i_sroa_0_1 = $799;
-          var $portalLeft_i_sroa_1_1 = $800;
-          var $portalLeft_i_sroa_2_1 = $798;
-          var $817 = $773;
-          var $816 = $777;
+          var $portalLeft_i_sroa_0_1 = $801;
+          var $portalLeft_i_sroa_1_1 = $802;
+          var $portalLeft_i_sroa_2_1 = $800;
+          var $819 = $775;
+          var $818 = $779;
          }
         } while (0);
-        var $816;
-        var $817;
+        var $818;
+        var $819;
         var $portalLeft_i_sroa_2_1;
         var $portalLeft_i_sroa_1_1;
         var $portalLeft_i_sroa_0_1;
         var $portalRight_i_sroa_2_2;
         var $portalRight_i_sroa_1_2;
         var $portalRight_i_sroa_0_2;
-        var $818;
+        var $820;
         var $leftIndex_1_i;
         var $rightIndex_2_i;
         var $leftPolyType_1_i;
@@ -28426,104 +28444,107 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
         var $leftPolyRef_1_i;
         var $rightPolyRef_2_i;
         var $i_1_i;
-        var $819 = $i_1_i + 1 | 0;
-        if (($819 | 0) < ($pathCount_052 | 0)) {
-         var $568 = $818;
+        var $821 = $i_1_i + 1 | 0;
+        if (($821 | 0) < ($pathCount_052 | 0)) {
+         var $570 = $820;
          var $leftIndex_0133_i = $leftIndex_1_i;
          var $rightIndex_0135_i = $rightIndex_2_i;
          var $leftPolyType_0137_i = $leftPolyType_1_i;
          var $rightPolyType_0139_i = $rightPolyType_2_i;
          var $leftPolyRef_0140_i = $leftPolyRef_1_i;
          var $rightPolyRef_0142_i = $rightPolyRef_2_i;
-         var $i_0143_i = $819;
+         var $i_0143_i = $821;
          var $portalRight_i_sroa_0_0 = $portalRight_i_sroa_0_2;
          var $portalRight_i_sroa_1_0 = $portalRight_i_sroa_1_2;
          var $portalRight_i_sroa_2_0 = $portalRight_i_sroa_2_2;
          var $portalLeft_i_sroa_0_0 = $portalLeft_i_sroa_0_1;
          var $portalLeft_i_sroa_1_0 = $portalLeft_i_sroa_1_1;
          var $portalLeft_i_sroa_2_0 = $portalLeft_i_sroa_2_1;
-         var $567 = $817;
-         var $566 = $816;
+         var $569 = $819;
+         var $568 = $818;
         } else {
          break L1251;
         }
        }
-       if ((__ZNK14dtNavMeshQuery26closestPointOnPolyBoundaryEjPKfPf(HEAP32[$_idx7 >> 2], $573, $18, $541) | 0) < 0) {
+       if ((__ZNK14dtNavMeshQuery26closestPointOnPolyBoundaryEjPKfPf(HEAP32[$_idx7 >> 2], $575, $18, $543) | 0) < 0) {
         var $_0_i = -2147483640;
         break L1245;
        }
-       __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($541, 0, $573, $522, $523, $524, $straightPathCount, $maxPath);
+       __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($543, 0, $575, $523, $524, $525, $straightPathCount, $maxPath);
        var $_0_i = (HEAP32[$straightPathCount >> 2] | 0) >= ($maxPath | 0) ? 1073741904 : 1073741888;
        break L1245;
       }
      } while (0);
-     __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($541, 2, 0, $522, $523, $524, $straightPathCount, $maxPath);
+     __ZNK14dtNavMeshQuery12appendVertexEPKfhjPfPhPjPii($543, 2, 0, $523, $524, $525, $straightPathCount, $maxPath);
      var $_0_i = (HEAP32[$straightPathCount >> 2] | 0) >= ($maxPath | 0) ? 1073741840 : 1073741824;
     }
    } while (0);
    var $_0_i;
-   if (($_0_i | 0) < 0) {
-    _printf(4784, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $_0_i, tempVarArgs));
-    STACKTOP = tempVarArgs;
-    break;
-   }
-   var $829 = HEAP32[$straightPathCount >> 2];
-   _printf(4696, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $829, tempVarArgs));
-   STACKTOP = tempVarArgs;
-   if (($829 | 0) <= 0) {
-    break;
-   }
-   var $832 = $buff | 0;
-   var $833 = $buff_i | 0;
-   var $i_044 = 0;
-   while (1) {
-    var $i_044;
-    var $835 = $i_044 * 3 & -1;
-    var $837 = HEAPF32[$straightPath + ($835 << 2) >> 2];
-    var $838 = $837;
-    var $839 = Math.abs($837) < 1.0000000116860974e-7;
-    var $841 = HEAPF32[$straightPath + ($835 + 1 << 2) >> 2];
-    do {
-     if ($839) {
-      if (Math.abs($841) >= 1.0000000116860974e-7) {
-       var $849 = $841;
-       label = 1008;
-       break;
-      }
-      var $847 = HEAPF32[$straightPath + ($835 + 2 << 2) >> 2];
-      if (Math.abs($847) >= 1.0000000116860974e-7) {
-       var $849 = $841;
-       label = 1008;
-       break;
-      }
-      _sprintf($832, 4624, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 24 | 0, HEAPF64[tempVarArgs >> 3] = $838, HEAPF64[tempVarArgs + 8 >> 3] = $841, HEAPF64[tempVarArgs + 16 >> 3] = $847, tempVarArgs));
-      STACKTOP = tempVarArgs;
-      _sprintf($833, 4080, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $832, tempVarArgs));
-      STACKTOP = tempVarArgs;
-      _emscripten_run_script($833);
-     } else {
-      var $849 = $841;
-      label = 1008;
-     }
-    } while (0);
-    if (label == 1008) {
-     label = 0;
-     var $849;
-     var $853 = HEAPF32[$straightPath + ($835 + 2 << 2) >> 2];
-     _sprintf($832, 5880, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 24 | 0, HEAPF64[tempVarArgs >> 3] = $838, HEAPF64[tempVarArgs + 8 >> 3] = $849, HEAPF64[tempVarArgs + 16 >> 3] = $853, tempVarArgs));
+   do {
+    if (($_0_i | 0) < 0) {
+     _printf(4784, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $_0_i, tempVarArgs));
      STACKTOP = tempVarArgs;
-     _sprintf($833, 4080, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $832, tempVarArgs));
-     STACKTOP = tempVarArgs;
-     _emscripten_run_script($833);
-     _emscripten_run_script($832);
-    }
-    var $861 = $i_044 + 1 | 0;
-    if (($861 | 0) < ($829 | 0)) {
-     var $i_044 = $861;
     } else {
-     break;
+     var $831 = HEAP32[$straightPathCount >> 2];
+     _printf(4696, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $831, tempVarArgs));
+     STACKTOP = tempVarArgs;
+     if (($831 | 0) <= 0) {
+      break;
+     }
+     var $834 = $buff | 0;
+     var $835 = $buff_i | 0;
+     var $i_048 = 0;
+     while (1) {
+      var $i_048;
+      var $837 = $i_048 * 3 & -1;
+      var $839 = HEAPF32[$523 + ($837 << 2) >> 2];
+      var $840 = $839;
+      var $841 = Math.abs($839) < 1.0000000116860974e-7;
+      var $843 = HEAPF32[$523 + ($837 + 1 << 2) >> 2];
+      do {
+       if ($841) {
+        if (Math.abs($843) >= 1.0000000116860974e-7) {
+         var $851 = $843;
+         label = 1008;
+         break;
+        }
+        var $849 = HEAPF32[$523 + ($837 + 2 << 2) >> 2];
+        if (Math.abs($849) >= 1.0000000116860974e-7) {
+         var $851 = $843;
+         label = 1008;
+         break;
+        }
+        _sprintf($834, 4624, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 24 | 0, HEAPF64[tempVarArgs >> 3] = $840, HEAPF64[tempVarArgs + 8 >> 3] = $843, HEAPF64[tempVarArgs + 16 >> 3] = $849, tempVarArgs));
+        STACKTOP = tempVarArgs;
+        _sprintf($835, 4080, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $834, tempVarArgs));
+        STACKTOP = tempVarArgs;
+        _emscripten_run_script($835);
+       } else {
+        var $851 = $843;
+        label = 1008;
+       }
+      } while (0);
+      if (label == 1008) {
+       label = 0;
+       var $851;
+       var $855 = HEAPF32[$523 + ($837 + 2 << 2) >> 2];
+       _sprintf($834, 5880, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 24 | 0, HEAPF64[tempVarArgs >> 3] = $840, HEAPF64[tempVarArgs + 8 >> 3] = $851, HEAPF64[tempVarArgs + 16 >> 3] = $855, tempVarArgs));
+       STACKTOP = tempVarArgs;
+       _sprintf($835, 4080, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $834, tempVarArgs));
+       STACKTOP = tempVarArgs;
+       _emscripten_run_script($835);
+       _emscripten_run_script($834);
+      }
+      var $863 = $i_048 + 1 | 0;
+      if (($863 | 0) < ($831 | 0)) {
+       var $i_048 = $863;
+      } else {
+       break;
+      }
+     }
     }
-   }
+   } while (0);
+   _llvm_stackrestore($522);
   }
  } while (0);
  if (label == 942) {
@@ -28531,21 +28552,21 @@ function __Z8findPathffffffiNSt3__112basic_stringIcNS_11char_traitsIcEENS_9alloc
   _printf(5104, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $_0_i550, tempVarArgs));
   STACKTOP = tempVarArgs;
  }
- var $863 = $buff | 0;
+ var $866 = $buff | 0;
  if ((HEAP8[$callback] & 1) == 0) {
-  var $874 = $callback + 1 | 0;
-  var $874;
-  var $875 = _sprintf($863, 5848, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $874, tempVarArgs));
+  var $877 = $callback + 1 | 0;
+  var $877;
+  var $878 = _sprintf($866, 5848, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $877, tempVarArgs));
   STACKTOP = tempVarArgs;
-  _emscripten_run_script($863);
+  _emscripten_run_script($866);
   STACKTOP = sp;
   return;
  } else {
-  var $874 = HEAP32[$callback + 8 >> 2];
-  var $874;
-  var $875 = _sprintf($863, 5848, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $874, tempVarArgs));
+  var $877 = HEAP32[$callback + 8 >> 2];
+  var $877;
+  var $878 = _sprintf($866, 5848, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $877, tempVarArgs));
   STACKTOP = tempVarArgs;
-  _emscripten_run_script($863);
+  _emscripten_run_script($866);
   STACKTOP = sp;
   return;
  }
@@ -28624,12 +28645,12 @@ function __Z12initWithFilev() {
   }
   var $6 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($6 | 0) == 0) {
-   label = 1039;
+   label = 1040;
    break;
   }
   FUNCTION_TABLE[$6]();
  }
- if (label == 1039) {
+ if (label == 1040) {
   var $16 = ___cxa_allocate_exception(4);
   HEAP32[$16 >> 2] = 9744;
   ___cxa_throw($16, 15960, 74);
@@ -28652,12 +28673,12 @@ function __Z12initWithFilev() {
   }
   var $33 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($33 | 0) == 0) {
-   label = 1050;
+   label = 1051;
    break;
   }
   FUNCTION_TABLE[$33]();
  }
- if (label == 1050) {
+ if (label == 1051) {
   var $43 = ___cxa_allocate_exception(4);
   HEAP32[$43 >> 2] = 9744;
   ___cxa_throw($43, 15960, 74);
@@ -28690,12 +28711,12 @@ function __Z12initWithFilev() {
     }
     var $70 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
     if (($70 | 0) == 0) {
-     label = 1063;
+     label = 1064;
      break;
     }
     FUNCTION_TABLE[$70]();
    }
-   if (label == 1063) {
+   if (label == 1064) {
     var $80 = ___cxa_allocate_exception(4);
     HEAP32[$80 >> 2] = 9744;
     ___cxa_throw($80, 15960, 74);
@@ -28713,7 +28734,7 @@ function __Z12initWithFilev() {
    var $src_0_ph_ph_i_i_ph = $67;
    var $_ph112_ph_i_i_ph = 0;
    var $_ph111_ph_i_i_ph = 0;
-   L1380 : while (1) {
+   L1381 : while (1) {
     var $_ph111_ph_i_i_ph;
     var $_ph112_ph_i_i_ph;
     var $src_0_ph_ph_i_i_ph;
@@ -28726,15 +28747,15 @@ function __Z12initWithFilev() {
      while (1) {
       var $src_0_i_i;
       if ($src_0_i_i >>> 0 >= $93 >>> 0) {
-       label = 1145;
-       break L1380;
+       label = 1146;
+       break L1381;
       }
       HEAP8[$52] = 0;
       var $_0_ph_ph_i_i_i = $src_0_i_i;
       var $n_0_ph_ph_i_i_i = 0;
       var $done_0_off0_ph_ph_i_i_i = 0;
       var $start_0_off0_ph_ph_i_i_i = 1;
-      L1387 : while (1) {
+      L1388 : while (1) {
        var $start_0_off0_ph_ph_i_i_i;
        var $done_0_off0_ph_ph_i_i_i;
        var $n_0_ph_ph_i_i_i;
@@ -28742,16 +28763,16 @@ function __Z12initWithFilev() {
        var $_0_ph_i_i_i = $_0_ph_ph_i_i_i;
        var $done_0_off0_ph_i_i_i = $done_0_off0_ph_ph_i_i_i;
        var $start_0_off0_ph_i_i_i = $start_0_off0_ph_ph_i_i_i;
-       L1389 : while (1) {
+       L1390 : while (1) {
         var $start_0_off0_ph_i_i_i;
         var $done_0_off0_ph_i_i_i;
         var $_0_ph_i_i_i;
         if (!($_0_ph_i_i_i >>> 0 < $93 >>> 0 & ($done_0_off0_ph_i_i_i ^ 1))) {
          var $_0_lcssa_i_i_i = $_0_ph_i_i_i;
-         break L1387;
+         break L1388;
         }
         var $not_start_0_off0_i_i_i = $start_0_off0_ph_i_i_i ^ 1;
-        L1392 : do {
+        L1393 : do {
          if ($start_0_off0_ph_i_i_i) {
           var $done_0_off0_ph233_i_us_i_i = $done_0_off0_ph_i_i_i;
           var $_0_ph435_i_us_i_i = $_0_ph_i_i_i;
@@ -28770,18 +28791,18 @@ function __Z12initWithFilev() {
              var $_lcssa76_i_i = $106;
              var $_lcssa80_i_i = $107;
              var $done_0_off0_ph233_i_lcssa83_i_i = $done_0_off0_ph233_i_us_i_i;
-             break L1392;
+             break L1393;
             } else if (!(($108 | 0) == 92 | ($108 | 0) == 13)) {
              var $116 = $106;
              var $115 = $107;
              var $done_0_off0_ph233_i86_i_i = $done_0_off0_ph233_i_us_i_i;
-             break L1389;
+             break L1390;
             }
             if ($107 >>> 0 < $93 >>> 0) {
              var $_014_us_i_us_i_i = $107;
             } else {
              var $_0_lcssa_i_i_i = $107;
-             break L1387;
+             break L1388;
             }
            }
            if ($107 >>> 0 < $93 >>> 0 & ($done_0_off0_ph233_i_us_i_i ^ 1)) {
@@ -28789,7 +28810,7 @@ function __Z12initWithFilev() {
             var $_0_ph435_i_us_i_i = $107;
            } else {
             var $_0_lcssa_i_i_i = $107;
-            break L1387;
+            break L1388;
            }
           }
          } else {
@@ -28803,21 +28824,21 @@ function __Z12initWithFilev() {
             var $_lcssa76_i_i = $111;
             var $_lcssa80_i_i = $112;
             var $done_0_off0_ph233_i_lcssa83_i_i = $done_0_off0_ph_i_i_i;
-            break L1392;
+            break L1393;
            } else if (($113 | 0) == 10) {
             var $_0_lcssa_i_i_i = $112;
-            break L1387;
+            break L1388;
            } else if (!(($113 | 0) == 92 | ($113 | 0) == 13)) {
             var $116 = $111;
             var $115 = $112;
             var $done_0_off0_ph233_i86_i_i = $done_0_off0_ph_i_i_i;
-            break L1389;
+            break L1390;
            }
            if ($112 >>> 0 < $93 >>> 0) {
             var $_014_us_i_i_i = $112;
            } else {
             var $_0_lcssa_i_i_i = $112;
-            break L1387;
+            break L1388;
            }
           }
          }
@@ -28861,11 +28882,11 @@ function __Z12initWithFilev() {
       if ($123 << 24 >> 24 == 110 | $123 << 24 >> 24 == 116) {
        var $src_0_i_i = $_0_lcssa_i_i_i;
       } else {
-       label = 1087;
+       label = 1088;
        break;
       }
      }
-     if (label == 1087) {
+     if (label == 1088) {
       label = 0;
       _sscanf($94, 7384, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 24 | 0, HEAP32[tempVarArgs >> 2] = $x_i_i, HEAP32[tempVarArgs + 8 >> 2] = $y_i_i, HEAP32[tempVarArgs + 16 >> 2] = $z_i_i, tempVarArgs));
       STACKTOP = tempVarArgs;
@@ -28885,8 +28906,8 @@ function __Z12initWithFilev() {
         }
         var $145 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
         if (($145 | 0) == 0) {
-         label = 1098;
-         break L1380;
+         label = 1099;
+         break L1381;
         }
         FUNCTION_TABLE[$145]();
        }
@@ -28923,7 +28944,7 @@ function __Z12initWithFilev() {
      var $189 = HEAP32[$96 >> 2];
      var $_021_ph_i_i_i = $94;
      var $j_0_ph_i_i_i = 0;
-     L1422 : while (1) {
+     L1423 : while (1) {
       var $j_0_ph_i_i_i;
       var $_021_ph_i_i_i;
       var $_021_i_i_i = $_021_ph_i_i_i;
@@ -28932,8 +28953,8 @@ function __Z12initWithFilev() {
        var $191;
        var $_021_i_i_i;
        if ($191 << 24 >> 24 == 0) {
-        label = 1119;
-        break L1422;
+        label = 1120;
+        break L1423;
        } else {
         var $_1_i_i_i = $_021_i_i_i;
         var $193 = $191;
@@ -28980,7 +29001,7 @@ function __Z12initWithFilev() {
        var $j_0_ph_i_i_i = $206;
       }
      }
-     if (label == 1119) {
+     if (label == 1120) {
       label = 0;
       if (($j_0_ph_i_i_i | 0) > 2) {
        var $_0_i175_i_i = $j_0_ph_i_i_i;
@@ -29022,8 +29043,8 @@ function __Z12initWithFilev() {
         }
         var $236 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
         if (($236 | 0) == 0) {
-         label = 1134;
-         break L1380;
+         label = 1135;
+         break L1381;
         }
         FUNCTION_TABLE[$236]();
        }
@@ -29061,19 +29082,19 @@ function __Z12initWithFilev() {
       var $src_0_ph_ph_i_i_ph = $_0_lcssa_i_i_i;
       var $_ph112_ph_i_i_ph = $271;
       var $_ph111_ph_i_i_ph = $186;
-      continue L1380;
+      continue L1381;
      }
     }
    }
-   if (label == 1098) {
+   if (label == 1099) {
     var $155 = ___cxa_allocate_exception(4);
     HEAP32[$155 >> 2] = 9744;
     ___cxa_throw($155, 15960, 74);
-   } else if (label == 1134) {
+   } else if (label == 1135) {
     var $246 = ___cxa_allocate_exception(4);
     HEAP32[$246 >> 2] = 9744;
     ___cxa_throw($246, 15960, 74);
-   } else if (label == 1145) {
+   } else if (label == 1146) {
     _free($67);
     var $275 = HEAP32[$100 >> 2] * 3 & -1;
     var $276$0 = _llvm_umul_with_overflow_i32($275, 4);
@@ -29086,12 +29107,12 @@ function __Z12initWithFilev() {
      }
      var $285 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
      if (($285 | 0) == 0) {
-      label = 1154;
+      label = 1155;
       break;
      }
      FUNCTION_TABLE[$285]();
     }
-    if (label == 1154) {
+    if (label == 1155) {
      var $295 = ___cxa_allocate_exception(4);
      HEAP32[$295 >> 2] = 9744;
      ___cxa_throw($295, 15960, 74);
@@ -29099,7 +29120,7 @@ function __Z12initWithFilev() {
     var $298 = $282;
     var $300 = $30 + 272 | 0;
     HEAP32[$300 >> 2] = $298;
-    L1471 : do {
+    L1472 : do {
      if (($275 | 0) > 0) {
       var $i1_074_i_i = 0;
       var $309 = $298;
@@ -29140,7 +29161,7 @@ function __Z12initWithFilev() {
        }
        var $372 = $i1_074_i_i + 3 | 0;
        if (($372 | 0) >= (HEAP32[$100 >> 2] * 3 & -1 | 0)) {
-        break L1471;
+        break L1472;
        }
        var $i1_074_i_i = $372;
        var $309 = HEAP32[$300 >> 2];
@@ -29158,12 +29179,12 @@ function __Z12initWithFilev() {
      }
      var $391 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
      if (($391 | 0) == 0) {
-      label = 1174;
+      label = 1175;
       break;
      }
      FUNCTION_TABLE[$391]();
     }
-    if (label == 1174) {
+    if (label == 1175) {
      var $401 = ___cxa_allocate_exception(4);
      HEAP32[$401 >> 2] = 9744;
      ___cxa_throw($401, 15960, 74);
@@ -29210,12 +29231,12 @@ function __Z5buildv() {
   }
   var $6 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($6 | 0) == 0) {
-   label = 1191;
+   label = 1192;
    break;
   }
   FUNCTION_TABLE[$6]();
  }
- if (label == 1191) {
+ if (label == 1192) {
   var $16 = ___cxa_allocate_exception(4);
   HEAP32[$16 >> 2] = 9744;
   ___cxa_throw($16, 15960, 74);
@@ -29452,12 +29473,12 @@ function __Z5buildv() {
     }
     var $250 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
     if (($250 | 0) == 0) {
-     label = 1250;
+     label = 1251;
      break;
     }
     FUNCTION_TABLE[$250]();
    }
-   if (label == 1250) {
+   if (label == 1251) {
     var $260 = ___cxa_allocate_exception(4);
     HEAP32[$260 >> 2] = 9744;
     ___cxa_throw($260, 15960, 74);
@@ -29602,7 +29623,7 @@ function __Z5buildv() {
     return $_0;
    }
    _puts(272);
-   L1631 : do {
+   L1632 : do {
     if ((HEAP32[17888 >> 2] | 0) < 7) {
      HEAP32[$navData >> 2] = 0;
      HEAP32[$navDataSize >> 2] = 0;
@@ -29626,10 +29647,10 @@ function __Z5buildv() {
         var $387 = $383;
        }
        var $387;
-       if ($387 << 24 >> 24 == 3) {
-        HEAP16[HEAP32[$377 + 12 >> 2] + ($i1_041 << 1) >> 1] = 5;
-       } else if ($387 << 24 >> 24 == 0 | $387 << 24 >> 24 == 4 | $387 << 24 >> 24 == 2) {
+       if ($387 << 24 >> 24 == 0 | $387 << 24 >> 24 == 4 | $387 << 24 >> 24 == 2) {
         HEAP16[HEAP32[$377 + 12 >> 2] + ($i1_041 << 1) >> 1] = 1;
+       } else if ($387 << 24 >> 24 == 3) {
+        HEAP16[HEAP32[$377 + 12 >> 2] + ($i1_041 << 1) >> 1] = 5;
        } else if ($387 << 24 >> 24 == 1) {
         HEAP16[HEAP32[$377 + 12 >> 2] + ($i1_041 << 1) >> 1] = 2;
        }
@@ -29752,7 +29773,7 @@ function __Z5buildv() {
        HEAP32[17760 >> 2] = $_0_i4;
        var $553 = __ZN14dtNavMeshQuery4initEPK9dtNavMeshi($_0_i4, HEAP32[17768 >> 2]);
        if (($553 | 0) >= 0) {
-        break L1631;
+        break L1632;
        }
        _printf(1272, (tempVarArgs = STACKTOP, STACKTOP = STACKTOP + 8 | 0, HEAP32[tempVarArgs >> 2] = $553, tempVarArgs));
        STACKTOP = tempVarArgs;
@@ -30095,28 +30116,28 @@ function __ZNSt3__111__stdoutbufIwE4syncEv($this) {
   var $17 = HEAP32[$__extbe >> 2] - $5 | 0;
   if ((_fwrite($3, 1, $17, HEAP32[$6 >> 2]) | 0) != ($17 | 0)) {
    var $_0 = -1;
-   label = 1358;
+   label = 1359;
    break;
   }
   if (($14 | 0) == 2) {
    var $_0 = -1;
-   label = 1359;
+   label = 1360;
    break;
   } else if (($14 | 0) != 1) {
-   label = 1356;
+   label = 1357;
    break;
   }
  }
- if (label == 1356) {
+ if (label == 1357) {
   var $_0 = ((_fflush(HEAP32[$6 >> 2]) | 0) != 0) << 31 >> 31;
   var $_0;
   STACKTOP = sp;
   return $_0;
- } else if (label == 1358) {
+ } else if (label == 1359) {
   var $_0;
   STACKTOP = sp;
   return $_0;
- } else if (label == 1359) {
+ } else if (label == 1360) {
   var $_0;
   STACKTOP = sp;
   return $_0;
@@ -30142,7 +30163,7 @@ function ___ZN10emscripten8internal7InvokerIvJffffffiNSt3__112basic_stringIcNS2_
    while (1) {
     var $19 = _malloc($_size_i);
     if (($19 | 0) != 0) {
-     label = 1376;
+     label = 1377;
      break;
     }
     var $22 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -30151,7 +30172,7 @@ function ___ZN10emscripten8internal7InvokerIvJffffffiNSt3__112basic_stringIcNS2_
     }
     FUNCTION_TABLE[$22]();
    }
-   if (label == 1376) {
+   if (label == 1377) {
     HEAP32[$1 + 8 >> 2] = $19;
     HEAP32[$1 >> 2] = $16 | 1;
     HEAP32[$1 + 4 >> 2] = $4;
@@ -30200,7 +30221,7 @@ function ___ZN10emscripten8internal7InvokerIvJffffffNSt3__112basic_stringIcNS2_1
    while (1) {
     var $19 = _malloc($_size_i);
     if (($19 | 0) != 0) {
-     label = 1404;
+     label = 1405;
      break;
     }
     var $22 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -30209,7 +30230,7 @@ function ___ZN10emscripten8internal7InvokerIvJffffffNSt3__112basic_stringIcNS2_1
     }
     FUNCTION_TABLE[$22]();
    }
-   if (label == 1404) {
+   if (label == 1405) {
     HEAP32[$1 + 8 >> 2] = $19;
     HEAP32[$1 >> 2] = $16 | 1;
     HEAP32[$1 + 4 >> 2] = $4;
@@ -30258,7 +30279,7 @@ function ___ZN10emscripten8internal7InvokerIvJNSt3__112basic_stringIcNS2_11char_
    while (1) {
     var $19 = _malloc($_size_i);
     if (($19 | 0) != 0) {
-     label = 1432;
+     label = 1433;
      break;
     }
     var $22 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -30267,7 +30288,7 @@ function ___ZN10emscripten8internal7InvokerIvJNSt3__112basic_stringIcNS2_11char_
     }
     FUNCTION_TABLE[$22]();
    }
-   if (label == 1432) {
+   if (label == 1433) {
     HEAP32[$1 + 8 >> 2] = $19;
     HEAP32[$1 >> 2] = $16 | 1;
     HEAP32[$1 + 4 >> 2] = $4;
@@ -30312,7 +30333,7 @@ function __ZNSt3__111__stdoutbufIwE8overflowEi($this, $__c) {
  var $__extbe = sp + 16;
  var $__e = sp + 24;
  var $1 = ($__c | 0) == -1;
- L1788 : do {
+ L1789 : do {
   if (!$1) {
    HEAP32[$__1buf >> 2] = $__c;
    if ((HEAP8[$this + 44 | 0] & 1) != 0) {
@@ -30340,32 +30361,32 @@ function __ZNSt3__111__stdoutbufIwE8overflowEi($this, $__c) {
     var $28 = FUNCTION_TABLE[HEAP32[HEAP32[$22 >> 2] + 12 >> 2]]($22, HEAP32[$17 >> 2], $pbase_0, $15, $__e, $14, $18, $__extbe);
     if ((HEAP32[$__e >> 2] | 0) == ($pbase_0 | 0)) {
      var $_0 = -1;
-     label = 1464;
+     label = 1465;
      break;
     }
     if (($28 | 0) == 3) {
-     label = 1457;
+     label = 1458;
      break;
     }
     var $39 = ($28 | 0) == 1;
     if ($28 >>> 0 >= 2) {
      var $_0 = -1;
-     label = 1466;
+     label = 1467;
      break;
     }
     var $44 = HEAP32[$__extbe >> 2] - $19 | 0;
     if ((_fwrite($14, 1, $44, HEAP32[$20 >> 2]) | 0) != ($44 | 0)) {
      var $_0 = -1;
-     label = 1467;
+     label = 1468;
      break;
     }
     if ($39) {
      var $pbase_0 = $39 ? HEAP32[$__e >> 2] : $pbase_0;
     } else {
-     break L1788;
+     break L1789;
     }
    }
-   if (label == 1457) {
+   if (label == 1458) {
     if ((_fwrite($pbase_0, 1, 1, HEAP32[$20 >> 2]) | 0) == 1) {
      break;
     } else {
@@ -30374,15 +30395,15 @@ function __ZNSt3__111__stdoutbufIwE8overflowEi($this, $__c) {
     var $_0;
     STACKTOP = sp;
     return $_0;
-   } else if (label == 1464) {
-    var $_0;
-    STACKTOP = sp;
-    return $_0;
-   } else if (label == 1466) {
+   } else if (label == 1465) {
     var $_0;
     STACKTOP = sp;
     return $_0;
    } else if (label == 1467) {
+    var $_0;
+    STACKTOP = sp;
+    return $_0;
+   } else if (label == 1468) {
     var $_0;
     STACKTOP = sp;
     return $_0;
@@ -30448,7 +30469,7 @@ function __ZNSt3__110__stdinbufIwE9pbackfailEi($this, $__c) {
   return $_019;
  }
  var $13 = $this + 48 | 0;
- L1828 : do {
+ L1829 : do {
   if ($5) {
    HEAP32[$__ci >> 2] = HEAP32[$13 >> 2];
    var $17 = HEAP32[$this + 36 >> 2];
@@ -30467,7 +30488,7 @@ function __ZNSt3__110__stdinbufIwE9pbackfailEi($this, $__c) {
    while (1) {
     var $33 = HEAP32[$__enxt >> 2];
     if ($33 >>> 0 <= $21 >>> 0) {
-     break L1828;
+     break L1829;
     }
     var $36 = $33 - 1 | 0;
     HEAP32[$__enxt >> 2] = $36;
@@ -30515,7 +30536,7 @@ function __ZNSt3__110__stdinbufIwE9__getcharEb($this, $__consume) {
  }
  var $10 = HEAP32[$this + 44 >> 2];
  var $_sroa_speculated = ($10 | 0) > 1 ? $10 : 1;
- L1848 : do {
+ L1849 : do {
   if (($_sroa_speculated | 0) > 0) {
    var $13 = $this + 32 | 0;
    var $__i_044 = 0;
@@ -30531,7 +30552,7 @@ function __ZNSt3__110__stdinbufIwE9__getcharEb($this, $__consume) {
     if (($21 | 0) < ($_sroa_speculated | 0)) {
      var $__i_044 = $21;
     } else {
-     break L1848;
+     break L1849;
     }
    }
    var $_0;
@@ -30539,7 +30560,7 @@ function __ZNSt3__110__stdinbufIwE9__getcharEb($this, $__consume) {
    return $_0;
   }
  } while (0);
- L1855 : do {
+ L1856 : do {
   if ((HEAP8[$this + 53 | 0] & 1) == 0) {
    var $27 = $this + 40 | 0;
    var $28 = $this + 36 | 0;
@@ -30557,46 +30578,46 @@ function __ZNSt3__110__stdinbufIwE9__getcharEb($this, $__consume) {
     var $41 = $__extbuf + $__nread_0 | 0;
     var $46 = FUNCTION_TABLE[HEAP32[HEAP32[$40 >> 2] + 16 >> 2]]($40, $37, $29, $41, $__enxt, $__1buf, $30, $__inxt);
     if (($46 | 0) == 3) {
-     label = 1510;
+     label = 1511;
      break;
     } else if (($46 | 0) == 2) {
      var $_0 = -1;
-     label = 1522;
+     label = 1523;
      break;
     } else if (($46 | 0) != 1) {
      var $__nread_2 = $__nread_0;
-     break L1855;
+     break L1856;
     }
     var $49 = HEAP32[$27 >> 2];
     HEAP32[$49 >> 2] = $39$0;
     HEAP32[$49 + 4 >> 2] = $39$1;
     if (($__nread_0 | 0) == 8) {
      var $_0 = -1;
-     label = 1523;
+     label = 1524;
      break;
     }
     var $53 = _fgetc(HEAP32[$31 >> 2]);
     if (($53 | 0) == -1) {
      var $_0 = -1;
-     label = 1524;
+     label = 1525;
      break;
     }
     HEAP8[$41] = $53 & 255;
     var $__nread_0 = $__nread_0 + 1 | 0;
    }
-   if (label == 1510) {
+   if (label == 1511) {
     HEAP32[$__1buf >> 2] = HEAP8[$29] | 0;
     var $__nread_2 = $__nread_0;
     break;
-   } else if (label == 1522) {
-    var $_0;
-    STACKTOP = sp;
-    return $_0;
    } else if (label == 1523) {
     var $_0;
     STACKTOP = sp;
     return $_0;
    } else if (label == 1524) {
+    var $_0;
+    STACKTOP = sp;
+    return $_0;
+   } else if (label == 1525) {
     var $_0;
     STACKTOP = sp;
     return $_0;
@@ -30625,13 +30646,13 @@ function __ZNSt3__110__stdinbufIwE9__getcharEb($this, $__consume) {
   var $65 = $__i2_0 - 1 | 0;
   if ((_ungetc(HEAP8[$__extbuf + $65 | 0] | 0, HEAP32[$61 >> 2]) | 0) == -1) {
    var $_0 = -1;
-   label = 1525;
+   label = 1526;
    break;
   } else {
    var $__i2_0 = $65;
   }
  }
- if (label == 1525) {
+ if (label == 1526) {
   var $_0;
   STACKTOP = sp;
   return $_0;
@@ -30691,28 +30712,28 @@ function __ZNSt3__111__stdoutbufIcE4syncEv($this) {
   var $17 = HEAP32[$__extbe >> 2] - $5 | 0;
   if ((_fwrite($3, 1, $17, HEAP32[$6 >> 2]) | 0) != ($17 | 0)) {
    var $_0 = -1;
-   label = 1546;
+   label = 1545;
    break;
   }
   if (($14 | 0) == 2) {
    var $_0 = -1;
-   label = 1544;
+   label = 1547;
    break;
   } else if (($14 | 0) != 1) {
-   label = 1542;
+   label = 1543;
    break;
   }
  }
- if (label == 1546) {
+ if (label == 1545) {
   var $_0;
   STACKTOP = sp;
   return $_0;
- } else if (label == 1542) {
+ } else if (label == 1547) {
+  var $_0;
+  STACKTOP = sp;
+  return $_0;
+ } else if (label == 1543) {
   var $_0 = ((_fflush(HEAP32[$6 >> 2]) | 0) != 0) << 31 >> 31;
-  var $_0;
-  STACKTOP = sp;
-  return $_0;
- } else if (label == 1544) {
   var $_0;
   STACKTOP = sp;
   return $_0;
@@ -30727,7 +30748,7 @@ function __ZNSt3__111__stdoutbufIcE8overflowEi($this, $__c) {
  var $__extbe = sp + 16;
  var $__e = sp + 24;
  var $1 = ($__c | 0) == -1;
- L1901 : do {
+ L1902 : do {
   if (!$1) {
    HEAP8[$__1buf] = $__c & 255;
    if ((HEAP8[$this + 44 | 0] & 1) != 0) {
@@ -30755,32 +30776,32 @@ function __ZNSt3__111__stdoutbufIcE8overflowEi($this, $__c) {
     var $28 = FUNCTION_TABLE[HEAP32[HEAP32[$22 >> 2] + 12 >> 2]]($22, HEAP32[$17 >> 2], $pbase_0, $15, $__e, $14, $18, $__extbe);
     if ((HEAP32[$__e >> 2] | 0) == ($pbase_0 | 0)) {
      var $_0 = -1;
-     label = 1562;
+     label = 1564;
      break;
     }
     if (($28 | 0) == 3) {
-     label = 1553;
+     label = 1554;
      break;
     }
     var $38 = ($28 | 0) == 1;
     if ($28 >>> 0 >= 2) {
      var $_0 = -1;
-     label = 1560;
+     label = 1565;
      break;
     }
     var $43 = HEAP32[$__extbe >> 2] - $19 | 0;
     if ((_fwrite($14, 1, $43, HEAP32[$20 >> 2]) | 0) != ($43 | 0)) {
      var $_0 = -1;
-     label = 1561;
+     label = 1563;
      break;
     }
     if ($38) {
      var $pbase_0 = $38 ? HEAP32[$__e >> 2] : $pbase_0;
     } else {
-     break L1901;
+     break L1902;
     }
    }
-   if (label == 1553) {
+   if (label == 1554) {
     if ((_fwrite($pbase_0, 1, 1, HEAP32[$20 >> 2]) | 0) == 1) {
      break;
     } else {
@@ -30789,15 +30810,15 @@ function __ZNSt3__111__stdoutbufIcE8overflowEi($this, $__c) {
     var $_0;
     STACKTOP = sp;
     return $_0;
-   } else if (label == 1562) {
+   } else if (label == 1563) {
     var $_0;
     STACKTOP = sp;
     return $_0;
-   } else if (label == 1561) {
+   } else if (label == 1565) {
     var $_0;
     STACKTOP = sp;
     return $_0;
-   } else if (label == 1560) {
+   } else if (label == 1564) {
     var $_0;
     STACKTOP = sp;
     return $_0;
@@ -30863,26 +30884,26 @@ function __ZNSt3__110__stdinbufIcE9pbackfailEi($this, $__c) {
   return $_019;
  }
  var $13 = $this + 48 | 0;
- L1941 : do {
+ L1942 : do {
   if ($5) {
    HEAP8[$__ci] = HEAP32[$13 >> 2] & 255;
    var $18 = HEAP32[$this + 36 >> 2];
    var $22 = $__extbuf | 0;
    var $28 = FUNCTION_TABLE[HEAP32[HEAP32[$18 >> 2] + 12 >> 2]]($18, HEAP32[$this + 40 >> 2], $__ci, $__ci + 1 | 0, $__inxt, $22, $__extbuf + 8 | 0, $__enxt);
-   if (($28 | 0) == 2 | ($28 | 0) == 1) {
+   if (($28 | 0) == 3) {
+    HEAP8[$22] = HEAP32[$13 >> 2] & 255;
+    HEAP32[$__enxt >> 2] = $__extbuf + 1;
+   } else if (($28 | 0) == 2 | ($28 | 0) == 1) {
     var $_019 = -1;
     var $_019;
     STACKTOP = sp;
     return $_019;
-   } else if (($28 | 0) == 3) {
-    HEAP8[$22] = HEAP32[$13 >> 2] & 255;
-    HEAP32[$__enxt >> 2] = $__extbuf + 1;
    }
    var $33 = $this + 32 | 0;
    while (1) {
     var $34 = HEAP32[$__enxt >> 2];
     if ($34 >>> 0 <= $22 >>> 0) {
-     break L1941;
+     break L1942;
     }
     var $37 = $34 - 1 | 0;
     HEAP32[$__enxt >> 2] = $37;
@@ -30930,7 +30951,7 @@ function __ZNSt3__110__stdinbufIcE9__getcharEb($this, $__consume) {
  }
  var $10 = HEAP32[$this + 44 >> 2];
  var $_sroa_speculated = ($10 | 0) > 1 ? $10 : 1;
- L1961 : do {
+ L1962 : do {
   if (($_sroa_speculated | 0) > 0) {
    var $13 = $this + 32 | 0;
    var $__i_044 = 0;
@@ -30946,7 +30967,7 @@ function __ZNSt3__110__stdinbufIcE9__getcharEb($this, $__consume) {
     if (($21 | 0) < ($_sroa_speculated | 0)) {
      var $__i_044 = $21;
     } else {
-     break L1961;
+     break L1962;
     }
    }
    var $_0;
@@ -30954,7 +30975,7 @@ function __ZNSt3__110__stdinbufIcE9__getcharEb($this, $__consume) {
    return $_0;
   }
  } while (0);
- L1968 : do {
+ L1969 : do {
   if ((HEAP8[$this + 53 | 0] & 1) == 0) {
    var $27 = $this + 40 | 0;
    var $28 = $this + 36 | 0;
@@ -30971,50 +30992,50 @@ function __ZNSt3__110__stdinbufIcE9__getcharEb($this, $__consume) {
     var $39 = HEAP32[$28 >> 2];
     var $40 = $__extbuf + $__nread_0 | 0;
     var $45 = FUNCTION_TABLE[HEAP32[HEAP32[$39 >> 2] + 16 >> 2]]($39, $36, $29, $40, $__enxt, $__1buf, $30, $__inxt);
-    if (($45 | 0) == 2) {
-     var $_0 = -1;
-     label = 1623;
+    if (($45 | 0) == 3) {
+     label = 1607;
      break;
-    } else if (($45 | 0) == 3) {
-     label = 1606;
+    } else if (($45 | 0) == 2) {
+     var $_0 = -1;
+     label = 1620;
      break;
     } else if (($45 | 0) != 1) {
      var $__nread_2 = $__nread_0;
-     break L1968;
+     break L1969;
     }
     var $48 = HEAP32[$27 >> 2];
     HEAP32[$48 >> 2] = $38$0;
     HEAP32[$48 + 4 >> 2] = $38$1;
     if (($__nread_0 | 0) == 8) {
      var $_0 = -1;
-     label = 1622;
+     label = 1624;
      break;
     }
     var $52 = _fgetc(HEAP32[$31 >> 2]);
     if (($52 | 0) == -1) {
      var $_0 = -1;
-     label = 1621;
+     label = 1623;
      break;
     }
     HEAP8[$40] = $52 & 255;
     var $__nread_0 = $__nread_0 + 1 | 0;
    }
-   if (label == 1623) {
+   if (label == 1624) {
     var $_0;
     STACKTOP = sp;
     return $_0;
-   } else if (label == 1621) {
-    var $_0;
-    STACKTOP = sp;
-    return $_0;
-   } else if (label == 1622) {
-    var $_0;
-    STACKTOP = sp;
-    return $_0;
-   } else if (label == 1606) {
+   } else if (label == 1607) {
     HEAP8[$__1buf] = HEAP8[$29];
     var $__nread_2 = $__nread_0;
     break;
+   } else if (label == 1620) {
+    var $_0;
+    STACKTOP = sp;
+    return $_0;
+   } else if (label == 1623) {
+    var $_0;
+    STACKTOP = sp;
+    return $_0;
    }
   } else {
    HEAP8[$__1buf] = HEAP8[$__extbuf | 0];
@@ -31033,25 +31054,25 @@ function __ZNSt3__110__stdinbufIcE9__getcharEb($this, $__consume) {
    while (1) {
     var $__i2_0;
     if (($__i2_0 | 0) <= 0) {
-     label = 1613;
+     label = 1614;
      break;
     }
     var $63 = $__i2_0 - 1 | 0;
     if ((_ungetc(HEAPU8[$__extbuf + $63 | 0], HEAP32[$59 >> 2]) | 0) == -1) {
      var $_0 = -1;
-     label = 1616;
+     label = 1617;
      break;
     } else {
      var $__i2_0 = $63;
     }
    }
-   if (label == 1613) {
-    var $75 = HEAP8[$__1buf];
-    break;
-   } else if (label == 1616) {
+   if (label == 1617) {
     var $_0;
     STACKTOP = sp;
     return $_0;
+   } else if (label == 1614) {
+    var $75 = HEAP8[$__1buf];
+    break;
    }
   }
  } while (0);
@@ -31817,21 +31838,17 @@ function __ZNKSt3__121__basic_string_commonILb1EE20__throw_length_errorEv() {
  while (1) {
   var $6 = _malloc(25);
   if (($6 | 0) != 0) {
-   label = 1858;
+   label = 1859;
    break;
   }
   var $9 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($9 | 0) == 0) {
-   label = 1852;
+   label = 1853;
    break;
   }
   FUNCTION_TABLE[$9]();
  }
- if (label == 1852) {
-  var $19 = ___cxa_allocate_exception(4);
-  HEAP32[$19 >> 2] = 9744;
-  ___cxa_throw($19, 15960, 74);
- } else if (label == 1858) {
+ if (label == 1859) {
   HEAP32[$6 + 4 >> 2] = 12;
   HEAP32[$6 >> 2] = 12;
   var $31 = $6 + 12 | 0;
@@ -31841,6 +31858,10 @@ function __ZNKSt3__121__basic_string_commonILb1EE20__throw_length_errorEv() {
   var $34 = $1;
   HEAP32[$34 >> 2] = 9840;
   ___cxa_throw($1, 16008, 284);
+ } else if (label == 1853) {
+  var $19 = ___cxa_allocate_exception(4);
+  HEAP32[$19 >> 2] = 9744;
+  ___cxa_throw($19, 15960, 74);
  }
 }
 function __ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7reserveEj($this) {
@@ -31882,13 +31903,13 @@ function __ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7reserv
   var $__now_long_0_off0 = 0;
  } else {
   var $_size_i = ($26 | 0) == 0 ? 1 : $26;
-  L2240 : do {
+  L2241 : do {
    if ($27 >>> 0 > $12 >>> 0) {
     while (1) {
      var $39 = _malloc($_size_i);
      if (($39 | 0) != 0) {
       var $__new_data_0 = $39;
-      break L2240;
+      break L2241;
      }
      var $42 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
      if (($42 | 0) == 0) {
@@ -31904,7 +31925,7 @@ function __ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE7reserv
      var $57 = _malloc($_size_i);
      if (($57 | 0) != 0) {
       var $__new_data_0 = $57;
-      break L2240;
+      break L2241;
      }
      var $60 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
      if (($60 | 0) == 0) {
@@ -31989,12 +32010,12 @@ function __ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE21__gro
   }
   var $29 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($29 | 0) == 0) {
-   label = 1929;
+   label = 1930;
    break;
   }
   FUNCTION_TABLE[$29]();
  }
- if (label == 1929) {
+ if (label == 1930) {
   var $39 = ___cxa_allocate_exception(4);
   HEAP32[$39 >> 2] = 9744;
   ___cxa_throw($39, 15960, 74);
@@ -32084,12 +32105,12 @@ function __ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE9__grow
   }
   var $29 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($29 | 0) == 0) {
-   label = 1966;
+   label = 1967;
    break;
   }
   FUNCTION_TABLE[$29]();
  }
- if (label == 1966) {
+ if (label == 1967) {
   var $39 = ___cxa_allocate_exception(4);
   HEAP32[$39 >> 2] = 9744;
   ___cxa_throw($39, 15960, 74);
@@ -32235,12 +32256,12 @@ function __ZNSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE6assign
   }
   var $80 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($80 | 0) == 0) {
-   label = 2010;
+   label = 2011;
    break;
   }
   FUNCTION_TABLE[$80]();
  }
- if (label == 2010) {
+ if (label == 2011) {
   var $90 = ___cxa_allocate_exception(4);
   HEAP32[$90 >> 2] = 9744;
   ___cxa_throw($90, 15960, 74);
@@ -32440,12 +32461,12 @@ function __ZNSt3__112basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEE9__grow
   }
   var $29 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($29 | 0) == 0) {
-   label = 2089;
+   label = 2090;
    break;
   }
   FUNCTION_TABLE[$29]();
  }
- if (label == 2089) {
+ if (label == 2090) {
   var $39 = ___cxa_allocate_exception(4);
   HEAP32[$39 >> 2] = 9744;
   ___cxa_throw($39, 15960, 74);
@@ -32649,7 +32670,7 @@ function __ZNSt3__115basic_streambufIcNS_11char_traitsIcEEE6xsgetnEPci($this, $_
    var $16 = FUNCTION_TABLE[HEAP32[HEAP32[$1 >> 2] + 40 >> 2]]($this);
    if (($16 | 0) == -1) {
     var $__i_0_lcssa = $__i_09;
-    label = 2138;
+    label = 2141;
     break;
    }
    var $storemerge = $16 & 255;
@@ -32666,10 +32687,10 @@ function __ZNSt3__115basic_streambufIcNS_11char_traitsIcEEE6xsgetnEPci($this, $_
    break;
   }
  }
- if (label == 2138) {
+ if (label == 2139) {
   var $__i_0_lcssa;
   return $__i_0_lcssa;
- } else if (label == 2139) {
+ } else if (label == 2141) {
   var $__i_0_lcssa;
   return $__i_0_lcssa;
  }
@@ -32710,7 +32731,7 @@ function __ZNSt3__115basic_streambufIcNS_11char_traitsIcEEE6xsputnEPKci($this, $
   } else {
    if ((FUNCTION_TABLE[HEAP32[HEAP32[$1 >> 2] + 52 >> 2]]($this, HEAPU8[$_09]) | 0) == -1) {
     var $__i_0_lcssa = $__i_08;
-    label = 2153;
+    label = 2156;
     break;
    }
   }
@@ -32720,14 +32741,14 @@ function __ZNSt3__115basic_streambufIcNS_11char_traitsIcEEE6xsputnEPKci($this, $
    var $_09 = $_09 + 1 | 0;
   } else {
    var $__i_0_lcssa = $22;
-   label = 2154;
+   label = 2155;
    break;
   }
  }
- if (label == 2153) {
+ if (label == 2155) {
   var $__i_0_lcssa;
   return $__i_0_lcssa;
- } else if (label == 2154) {
+ } else if (label == 2156) {
   var $__i_0_lcssa;
   return $__i_0_lcssa;
  }
@@ -32779,7 +32800,7 @@ function __ZNSt3__115basic_streambufIwNS_11char_traitsIwEEE6xsgetnEPwi($this, $_
    var $16 = FUNCTION_TABLE[HEAP32[HEAP32[$1 >> 2] + 40 >> 2]]($this);
    if (($16 | 0) == -1) {
     var $__i_0_lcssa = $__i_09;
-    label = 2174;
+    label = 2176;
     break;
    } else {
     var $storemerge = $16;
@@ -32793,14 +32814,14 @@ function __ZNSt3__115basic_streambufIwNS_11char_traitsIwEEE6xsgetnEPwi($this, $_
    var $__i_09 = $19;
   } else {
    var $__i_0_lcssa = $19;
-   label = 2173;
+   label = 2174;
    break;
   }
  }
- if (label == 2173) {
+ if (label == 2174) {
   var $__i_0_lcssa;
   return $__i_0_lcssa;
- } else if (label == 2174) {
+ } else if (label == 2176) {
   var $__i_0_lcssa;
   return $__i_0_lcssa;
  }
@@ -32925,12 +32946,12 @@ function __ZNSt3__18ios_base5clearEj($this, $state) {
   }
   var $33 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
   if (($33 | 0) == 0) {
-   label = 2219;
+   label = 2220;
    break;
   }
   FUNCTION_TABLE[$33]();
  }
- if (label == 2219) {
+ if (label == 2220) {
   var $43 = ___cxa_allocate_exception(4);
   HEAP32[$43 >> 2] = 9744;
   ___cxa_throw($43, 15960, 74);
@@ -32997,7 +33018,7 @@ function __ZNSt3__18ios_base5clearEj($this, $state) {
    while (1) {
     var $120 = _malloc($_size_i_i_i);
     if (($120 | 0) != 0) {
-     label = 2252;
+     label = 2253;
      break;
     }
     var $123 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -33006,7 +33027,7 @@ function __ZNSt3__18ios_base5clearEj($this, $state) {
     }
     FUNCTION_TABLE[$123]();
    }
-   if (label == 2252) {
+   if (label == 2253) {
     HEAP32[$120 + 4 >> 2] = $115;
     HEAP32[$120 >> 2] = $115;
     var $139 = $120 + 12 | 0;
@@ -33089,7 +33110,7 @@ function __ZNSt3__16locale5facetD2Ev($this) {
 }
 function __ZNKSt3__17collateIcE10do_compareEPKcS3_S3_S3_($this, $__lo1, $__hi1, $__lo2, $__hi2) {
  var label = 0;
- L2668 : do {
+ L2669 : do {
   if (($__lo2 | 0) == ($__hi2 | 0)) {
    var $_013_lcssa = $__lo1;
   } else {
@@ -33100,26 +33121,26 @@ function __ZNKSt3__17collateIcE10do_compareEPKcS3_S3_S3_($this, $__lo1, $__hi1, 
     var $_01315;
     if (($_01315 | 0) == ($__hi1 | 0)) {
      var $_0 = -1;
-     label = 2298;
+     label = 2297;
      break;
     }
     var $4 = HEAP8[$_01315];
     var $5 = HEAP8[$_01216];
     if ($4 << 24 >> 24 < $5 << 24 >> 24) {
      var $_0 = -1;
-     label = 2295;
+     label = 2298;
      break;
     }
     if ($5 << 24 >> 24 < $4 << 24 >> 24) {
      var $_0 = 1;
-     label = 2297;
+     label = 2299;
      break;
     }
     var $10 = $_01315 + 1 | 0;
     var $11 = $_01216 + 1 | 0;
     if (($11 | 0) == ($__hi2 | 0)) {
      var $_013_lcssa = $10;
-     break L2668;
+     break L2669;
     } else {
      var $_01315 = $10;
      var $_01216 = $11;
@@ -33128,10 +33149,10 @@ function __ZNKSt3__17collateIcE10do_compareEPKcS3_S3_S3_($this, $__lo1, $__hi1, 
    if (label == 2298) {
     var $_0;
     return $_0;
-   } else if (label == 2295) {
+   } else if (label == 2297) {
     var $_0;
     return $_0;
-   } else if (label == 2297) {
+   } else if (label == 2299) {
     var $_0;
     return $_0;
    }
@@ -33415,27 +33436,27 @@ function __ZNKSt3__119__iostream_category7messageEi($agg_result, $this, $ev) {
   while (1) {
    var $41 = _malloc(48);
    if (($41 | 0) != 0) {
-    label = 2466;
+    label = 2467;
     break;
    }
    var $44 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
    if (($44 | 0) == 0) {
-    label = 2463;
+    label = 2464;
     break;
    }
    FUNCTION_TABLE[$44]();
   }
-  if (label == 2463) {
-   var $54 = ___cxa_allocate_exception(4);
-   HEAP32[$54 >> 2] = 9744;
-   ___cxa_throw($54, 15960, 74);
-  } else if (label == 2466) {
+  if (label == 2467) {
    HEAP32[$agg_result + 8 >> 2] = $41;
    HEAP32[$agg_result >> 2] = 49;
    HEAP32[$agg_result + 4 >> 2] = 35;
    _memcpy($41, 8016, 35) | 0;
    HEAP8[$41 + 35 | 0] = 0;
    return;
+  } else if (label == 2464) {
+   var $54 = ___cxa_allocate_exception(4);
+   HEAP32[$54 >> 2] = 9744;
+   ___cxa_throw($54, 15960, 74);
   }
  }
  var $3 = _strerror($ev);
@@ -33453,7 +33474,7 @@ function __ZNKSt3__119__iostream_category7messageEi($agg_result, $this, $ev) {
    while (1) {
     var $19 = _malloc($_size_i_i);
     if (($19 | 0) != 0) {
-     label = 2454;
+     label = 2455;
      break;
     }
     var $22 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -33462,7 +33483,7 @@ function __ZNKSt3__119__iostream_category7messageEi($agg_result, $this, $ev) {
     }
     FUNCTION_TABLE[$22]();
    }
-   if (label == 2454) {
+   if (label == 2455) {
     HEAP32[$agg_result + 8 >> 2] = $19;
     HEAP32[$agg_result >> 2] = $16 | 1;
     HEAP32[$agg_result + 4 >> 2] = $4;
@@ -33514,7 +33535,7 @@ function __ZNKSt3__17collateIcE7do_hashEPKcS3_($this, $__lo, $__hi) {
 }
 function __ZNKSt3__17collateIwE10do_compareEPKwS3_S3_S3_($this, $__lo1, $__hi1, $__lo2, $__hi2) {
  var label = 0;
- L2848 : do {
+ L2849 : do {
   if (($__lo2 | 0) == ($__hi2 | 0)) {
    var $_013_lcssa = $__lo1;
   } else {
@@ -33525,26 +33546,26 @@ function __ZNKSt3__17collateIwE10do_compareEPKwS3_S3_S3_($this, $__lo1, $__hi1, 
     var $_01315;
     if (($_01315 | 0) == ($__hi1 | 0)) {
      var $_0 = -1;
-     label = 2487;
+     label = 2488;
      break;
     }
     var $4 = HEAP32[$_01315 >> 2];
     var $5 = HEAP32[$_01216 >> 2];
     if (($4 | 0) < ($5 | 0)) {
      var $_0 = -1;
-     label = 2486;
+     label = 2487;
      break;
     }
     if (($5 | 0) < ($4 | 0)) {
      var $_0 = 1;
-     label = 2485;
+     label = 2486;
      break;
     }
     var $10 = $_01315 + 4 | 0;
     var $11 = $_01216 + 4 | 0;
     if (($11 | 0) == ($__hi2 | 0)) {
      var $_013_lcssa = $10;
-     break L2848;
+     break L2849;
     } else {
      var $_01315 = $10;
      var $_01216 = $11;
@@ -33553,7 +33574,7 @@ function __ZNKSt3__17collateIwE10do_compareEPKwS3_S3_S3_($this, $__lo1, $__hi1, 
    if (label == 2487) {
     var $_0;
     return $_0;
-   } else if (label == 2485) {
+   } else if (label == 2488) {
     var $_0;
     return $_0;
    } else if (label == 2486) {
@@ -33625,7 +33646,7 @@ function __ZNKSt3__17collateIcE12do_transformEPKcS3_($agg_result, $this, $__lo, 
    while (1) {
     var $17 = _malloc($_size_i);
     if (($17 | 0) != 0) {
-     label = 2518;
+     label = 2519;
      break;
     }
     var $20 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -33634,7 +33655,7 @@ function __ZNKSt3__17collateIcE12do_transformEPKcS3_($agg_result, $this, $__lo, 
     }
     FUNCTION_TABLE[$20]();
    }
-   if (label == 2518) {
+   if (label == 2519) {
     HEAP32[$agg_result + 8 >> 2] = $17;
     HEAP32[$agg_result >> 2] = $14 | 1;
     HEAP32[$agg_result + 4 >> 2] = $3;
@@ -33692,7 +33713,7 @@ function __ZNKSt3__17collateIwE12do_transformEPKwS3_($agg_result, $this, $__lo, 
    while (1) {
     var $19 = _malloc($_size_i);
     if (($19 | 0) != 0) {
-     label = 2541;
+     label = 2542;
      break;
     }
     var $22 = (tempValue = HEAP32[22056 >> 2], HEAP32[22056 >> 2] = tempValue + 0, tempValue);
@@ -33701,7 +33722,7 @@ function __ZNKSt3__17collateIwE12do_transformEPKwS3_($agg_result, $this, $__lo, 
     }
     FUNCTION_TABLE[$22]();
    }
-   if (label == 2541) {
+   if (label == 2542) {
     var $36 = $19;
     HEAP32[$agg_result + 8 >> 2] = $36;
     HEAP32[$agg_result >> 2] = $15 | 1;
@@ -33944,7 +33965,7 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
  var $__n_does_match_2 = $__n_does_match_0_lcssa;
  var $__n_might_match_2 = $__n_might_match_0_lcssa;
  var $__e_sroa_0_0 = $__e_0;
- L2986 : while (1) {
+ L2987 : while (1) {
   var $__e_sroa_0_0;
   var $__n_might_match_2;
   var $__n_does_match_2;
@@ -34010,7 +34031,7 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
    var $__e_sroa_0_0 = $__e_sroa_0_2;
    continue;
   }
-  L3013 : do {
+  L3014 : do {
    if ($__case_sensitive) {
     var $__n_might_match_3233_us = $__n_might_match_2;
     var $__n_does_match_3234_us = $__n_does_match_2;
@@ -34070,7 +34091,7 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
       var $__n_might_match_3_lcssa = $__n_might_match_4_us;
       var $__n_does_match_3_lcssa = $__n_does_match_4_us;
       var $__consume_0_off0_lcssa = $__consume_1_off0_us;
-      break L3013;
+      break L3014;
      }
      var $__n_might_match_3233_us = $__n_might_match_4_us;
      var $__n_does_match_3234_us = $__n_does_match_4_us;
@@ -34137,7 +34158,7 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
       var $__n_might_match_3_lcssa = $__n_might_match_4;
       var $__n_does_match_3_lcssa = $__n_does_match_4;
       var $__consume_0_off0_lcssa = $__consume_1_off0;
-      break L3013;
+      break L3014;
      }
      var $__n_might_match_3233 = $__n_might_match_4;
      var $__n_does_match_3234 = $__n_does_match_4;
@@ -34206,7 +34227,7 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
     var $__n_does_match_2 = $__n_does_match_6;
     var $__n_might_match_2 = $__n_might_match_3_lcssa;
     var $__e_sroa_0_0 = $__e_sroa_0_2;
-    continue L2986;
+    continue L2987;
    } else {
     var $__n_does_match_5247 = $__n_does_match_6;
     var $__st_2248 = $__st_2248 + 1 | 0;
@@ -34236,36 +34257,36 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
  var $228 = ($227 | 0) == 0;
  do {
   if ($72) {
-   label = 2691;
+   label = 2692;
   } else {
    if ((HEAP32[$__e_sroa_0_2 + 12 >> 2] | 0) != (HEAP32[$__e_sroa_0_2 + 16 >> 2] | 0)) {
     if ($228) {
      break;
     } else {
-     label = 2693;
+     label = 2694;
      break;
     }
    }
    if ((FUNCTION_TABLE[HEAP32[HEAP32[$__e_sroa_0_2 >> 2] + 36 >> 2]]($__e_sroa_0_2) | 0) == -1) {
-    label = 2691;
+    label = 2692;
     break;
    }
    if (!$228) {
-    label = 2693;
+    label = 2694;
    }
   }
  } while (0);
- if (label == 2691) {
+ if (label == 2692) {
   if ($228) {
-   label = 2693;
+   label = 2694;
   }
  }
- if (label == 2693) {
+ if (label == 2694) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
- L3088 : do {
+ L3089 : do {
   if ($16) {
-   label = 2698;
+   label = 2699;
   } else {
    var $_0209227 = $__kb;
    var $__st_3228 = $__status_0;
@@ -34274,19 +34295,19 @@ function __ZNSt3__114__scan_keywordINS_19istreambuf_iteratorIcNS_11char_traitsIc
     var $_0209227;
     if ((HEAP8[$__st_3228] | 0) == 2) {
      var $_0209226 = $_0209227;
-     break L3088;
+     break L3089;
     }
     var $248 = $_0209227 + 12 | 0;
     if (($248 | 0) == ($__ke | 0)) {
-     label = 2698;
-     break L3088;
+     label = 2699;
+     break L3089;
     }
     var $_0209227 = $248;
     var $__st_3228 = $__st_3228 + 1 | 0;
    }
   }
  } while (0);
- if (label == 2698) {
+ if (label == 2699) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 4;
   var $_0209226 = $__ke;
  }
@@ -34470,7 +34491,7 @@ function __ZNSt3__116__check_groupingERKNS_12basic_stringIcNS_11char_traitsIcEEN
  var $44 = HEAP8[$32];
  var $45 = $44 << 24 >> 24;
  var $or_cond80 = $44 << 24 >> 24 < 1 | $44 << 24 >> 24 == 127;
- L3165 : do {
+ L3166 : do {
   if ($42 >>> 0 > $__g >>> 0) {
    var $48 = $32 + $41 | 0;
    var $__ig_081 = $32;
@@ -34500,7 +34521,7 @@ function __ZNSt3__116__check_groupingERKNS_12basic_stringIcNS_11char_traitsIcEEN
     } else {
      var $_lcssa76 = $63;
      var $or_cond_lcssa = $or_cond;
-     break L3165;
+     break L3166;
     }
    }
    HEAP32[$__err >> 2] = 4;
@@ -34553,12 +34574,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  STACKTOP = STACKTOP + 4 | 0;
  STACKTOP = STACKTOP + 7 >> 3 << 3;
  var $4 = HEAP32[$__iob + 4 >> 2] & 74;
- if (($4 | 0) == 64) {
+ if (($4 | 0) == 8) {
+  var $_0_i = 16;
+ } else if (($4 | 0) == 64) {
   var $_0_i = 8;
  } else if (($4 | 0) == 0) {
   var $_0_i = 0;
- } else if (($4 | 0) == 8) {
-  var $_0_i = 16;
  } else {
   var $_0_i = 10;
  }
@@ -34595,7 +34616,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $24 = HEAP8[$__thousands_sep];
  var $__a_0 = $18;
  var $25 = HEAP32[$20 >> 2];
- L3193 : while (1) {
+ L3194 : while (1) {
   var $25;
   var $__a_0;
   do {
@@ -34619,7 +34640,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
   var $43 = HEAP32[$21 >> 2];
   do {
    if (($43 | 0) == 0) {
-    label = 2787;
+    label = 2788;
    } else {
     if ((HEAP32[$43 + 12 >> 2] | 0) != (HEAP32[$43 + 16 >> 2] | 0)) {
      if ($42) {
@@ -34630,12 +34651,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3193;
+      break L3194;
      }
     }
     if ((FUNCTION_TABLE[HEAP32[HEAP32[$43 >> 2] + 36 >> 2]]($43) | 0) == -1) {
      HEAP32[$21 >> 2] = 0;
-     label = 2787;
+     label = 2788;
      break;
     } else {
      if ($42) {
@@ -34646,12 +34667,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3193;
+      break L3194;
      }
     }
    }
   } while (0);
-  if (label == 2787) {
+  if (label == 2788) {
    label = 0;
    if ($42) {
     var $__a_2 = $__a_0;
@@ -34761,9 +34782,9 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  } while (0);
  var $176;
  var $177 = ($176 | 0) == 0;
- L3249 : do {
+ L3250 : do {
   if ($135) {
-   label = 2831;
+   label = 2832;
   } else {
    do {
     if ((HEAP32[$136 + 12 >> 2] | 0) == (HEAP32[$136 + 16 >> 2] | 0)) {
@@ -34771,21 +34792,21 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       break;
      }
      HEAP32[$21 >> 2] = 0;
-     label = 2831;
-     break L3249;
+     label = 2832;
+     break L3250;
     }
    } while (0);
    if (!($177 ^ ($136 | 0) == 0)) {
-    label = 2833;
+    label = 2834;
    }
   }
  } while (0);
- if (label == 2831) {
+ if (label == 2832) {
   if ($177) {
-   label = 2833;
+   label = 2834;
   }
  }
- if (label == 2833) {
+ if (label == 2834) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
  HEAP32[$agg_result >> 2] = $176;
@@ -34953,12 +34974,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  STACKTOP = STACKTOP + 4 | 0;
  STACKTOP = STACKTOP + 7 >> 3 << 3;
  var $4 = HEAP32[$__iob + 4 >> 2] & 74;
- if (($4 | 0) == 64) {
-  var $_0_i = 8;
+ if (($4 | 0) == 8) {
+  var $_0_i = 16;
  } else if (($4 | 0) == 0) {
   var $_0_i = 0;
- } else if (($4 | 0) == 8) {
-  var $_0_i = 16;
+ } else if (($4 | 0) == 64) {
+  var $_0_i = 8;
  } else {
   var $_0_i = 10;
  }
@@ -34995,7 +35016,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $24 = HEAP8[$__thousands_sep];
  var $__a_0 = $18;
  var $25 = HEAP32[$20 >> 2];
- L3329 : while (1) {
+ L3330 : while (1) {
   var $25;
   var $__a_0;
   do {
@@ -35019,7 +35040,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
   var $43 = HEAP32[$21 >> 2];
   do {
    if (($43 | 0) == 0) {
-    label = 2906;
+    label = 2907;
    } else {
     if ((HEAP32[$43 + 12 >> 2] | 0) != (HEAP32[$43 + 16 >> 2] | 0)) {
      if ($42) {
@@ -35030,12 +35051,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3329;
+      break L3330;
      }
     }
     if ((FUNCTION_TABLE[HEAP32[HEAP32[$43 >> 2] + 36 >> 2]]($43) | 0) == -1) {
      HEAP32[$21 >> 2] = 0;
-     label = 2906;
+     label = 2907;
      break;
     } else {
      if ($42) {
@@ -35046,12 +35067,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3329;
+      break L3330;
      }
     }
    }
   } while (0);
-  if (label == 2906) {
+  if (label == 2907) {
    label = 0;
    if ($42) {
     var $__a_2 = $__a_0;
@@ -35163,9 +35184,9 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  } while (0);
  var $176;
  var $177 = ($176 | 0) == 0;
- L3385 : do {
+ L3386 : do {
   if ($135) {
-   label = 2950;
+   label = 2951;
   } else {
    do {
     if ((HEAP32[$136 + 12 >> 2] | 0) == (HEAP32[$136 + 16 >> 2] | 0)) {
@@ -35173,21 +35194,21 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       break;
      }
      HEAP32[$21 >> 2] = 0;
-     label = 2950;
-     break L3385;
+     label = 2951;
+     break L3386;
     }
    } while (0);
    if (!($177 ^ ($136 | 0) == 0)) {
-    label = 2952;
+    label = 2953;
    }
   }
  } while (0);
- if (label == 2950) {
+ if (label == 2951) {
   if ($177) {
-   label = 2952;
+   label = 2953;
   }
  }
- if (label == 2952) {
+ if (label == 2953) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
  HEAP32[$agg_result >> 2] = $176;
@@ -35300,12 +35321,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  STACKTOP = STACKTOP + 4 | 0;
  STACKTOP = STACKTOP + 7 >> 3 << 3;
  var $4 = HEAP32[$__iob + 4 >> 2] & 74;
- if (($4 | 0) == 0) {
-  var $_0_i = 0;
- } else if (($4 | 0) == 8) {
+ if (($4 | 0) == 8) {
   var $_0_i = 16;
  } else if (($4 | 0) == 64) {
   var $_0_i = 8;
+ } else if (($4 | 0) == 0) {
+  var $_0_i = 0;
  } else {
   var $_0_i = 10;
  }
@@ -35342,7 +35363,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $24 = HEAP8[$__thousands_sep];
  var $__a_0 = $18;
  var $25 = HEAP32[$20 >> 2];
- L3440 : while (1) {
+ L3441 : while (1) {
   var $25;
   var $__a_0;
   do {
@@ -35366,7 +35387,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
   var $43 = HEAP32[$21 >> 2];
   do {
    if (($43 | 0) == 0) {
-    label = 3001;
+    label = 3002;
    } else {
     if ((HEAP32[$43 + 12 >> 2] | 0) != (HEAP32[$43 + 16 >> 2] | 0)) {
      if ($42) {
@@ -35377,12 +35398,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3440;
+      break L3441;
      }
     }
     if ((FUNCTION_TABLE[HEAP32[HEAP32[$43 >> 2] + 36 >> 2]]($43) | 0) == -1) {
      HEAP32[$21 >> 2] = 0;
-     label = 3001;
+     label = 3002;
      break;
     } else {
      if ($42) {
@@ -35393,12 +35414,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3440;
+      break L3441;
      }
     }
    }
   } while (0);
-  if (label == 3001) {
+  if (label == 3002) {
    label = 0;
    if ($42) {
     var $__a_2 = $__a_0;
@@ -35508,9 +35529,9 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  } while (0);
  var $176;
  var $177 = ($176 | 0) == 0;
- L3496 : do {
+ L3497 : do {
   if ($135) {
-   label = 3045;
+   label = 3046;
   } else {
    do {
     if ((HEAP32[$136 + 12 >> 2] | 0) == (HEAP32[$136 + 16 >> 2] | 0)) {
@@ -35518,21 +35539,21 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       break;
      }
      HEAP32[$21 >> 2] = 0;
-     label = 3045;
-     break L3496;
+     label = 3046;
+     break L3497;
     }
    } while (0);
    if (!($177 ^ ($136 | 0) == 0)) {
-    label = 3047;
+    label = 3048;
    }
   }
  } while (0);
- if (label == 3045) {
+ if (label == 3046) {
   if ($177) {
-   label = 3047;
+   label = 3048;
   }
  }
- if (label == 3047) {
+ if (label == 3048) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
  HEAP32[$agg_result >> 2] = $176;
@@ -35646,10 +35667,10 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $4 = HEAP32[$__iob + 4 >> 2] & 74;
  if (($4 | 0) == 8) {
   var $_0_i = 16;
- } else if (($4 | 0) == 0) {
-  var $_0_i = 0;
  } else if (($4 | 0) == 64) {
   var $_0_i = 8;
+ } else if (($4 | 0) == 0) {
+  var $_0_i = 0;
  } else {
   var $_0_i = 10;
  }
@@ -35686,7 +35707,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $24 = HEAP8[$__thousands_sep];
  var $__a_0 = $18;
  var $25 = HEAP32[$20 >> 2];
- L3556 : while (1) {
+ L3557 : while (1) {
   var $25;
   var $__a_0;
   do {
@@ -35710,7 +35731,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
   var $43 = HEAP32[$21 >> 2];
   do {
    if (($43 | 0) == 0) {
-    label = 3100;
+    label = 3101;
    } else {
     if ((HEAP32[$43 + 12 >> 2] | 0) != (HEAP32[$43 + 16 >> 2] | 0)) {
      if ($42) {
@@ -35721,12 +35742,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3556;
+      break L3557;
      }
     }
     if ((FUNCTION_TABLE[HEAP32[HEAP32[$43 >> 2] + 36 >> 2]]($43) | 0) == -1) {
      HEAP32[$21 >> 2] = 0;
-     label = 3100;
+     label = 3101;
      break;
     } else {
      if ($42) {
@@ -35737,12 +35758,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3556;
+      break L3557;
      }
     }
    }
   } while (0);
-  if (label == 3100) {
+  if (label == 3101) {
    label = 0;
    if ($42) {
     var $__a_2 = $__a_0;
@@ -35852,9 +35873,9 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  } while (0);
  var $176;
  var $177 = ($176 | 0) == 0;
- L3612 : do {
+ L3613 : do {
   if ($135) {
-   label = 3144;
+   label = 3145;
   } else {
    do {
     if ((HEAP32[$136 + 12 >> 2] | 0) == (HEAP32[$136 + 16 >> 2] | 0)) {
@@ -35862,21 +35883,21 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       break;
      }
      HEAP32[$21 >> 2] = 0;
-     label = 3144;
-     break L3612;
+     label = 3145;
+     break L3613;
     }
    } while (0);
    if (!($177 ^ ($136 | 0) == 0)) {
-    label = 3146;
+    label = 3147;
    }
   }
  } while (0);
- if (label == 3144) {
+ if (label == 3145) {
   if ($177) {
-   label = 3146;
+   label = 3147;
   }
  }
- if (label == 3146) {
+ if (label == 3147) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
  HEAP32[$agg_result >> 2] = $176;
@@ -35988,12 +36009,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  STACKTOP = STACKTOP + 4 | 0;
  STACKTOP = STACKTOP + 7 >> 3 << 3;
  var $4 = HEAP32[$__iob + 4 >> 2] & 74;
- if (($4 | 0) == 0) {
-  var $_0_i = 0;
- } else if (($4 | 0) == 8) {
+ if (($4 | 0) == 8) {
   var $_0_i = 16;
  } else if (($4 | 0) == 64) {
   var $_0_i = 8;
+ } else if (($4 | 0) == 0) {
+  var $_0_i = 0;
  } else {
   var $_0_i = 10;
  }
@@ -36030,7 +36051,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $24 = HEAP8[$__thousands_sep];
  var $__a_0 = $18;
  var $25 = HEAP32[$20 >> 2];
- L3672 : while (1) {
+ L3673 : while (1) {
   var $25;
   var $__a_0;
   do {
@@ -36054,7 +36075,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
   var $43 = HEAP32[$21 >> 2];
   do {
    if (($43 | 0) == 0) {
-    label = 3199;
+    label = 3200;
    } else {
     if ((HEAP32[$43 + 12 >> 2] | 0) != (HEAP32[$43 + 16 >> 2] | 0)) {
      if ($42) {
@@ -36065,12 +36086,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3672;
+      break L3673;
      }
     }
     if ((FUNCTION_TABLE[HEAP32[HEAP32[$43 >> 2] + 36 >> 2]]($43) | 0) == -1) {
      HEAP32[$21 >> 2] = 0;
-     label = 3199;
+     label = 3200;
      break;
     } else {
      if ($42) {
@@ -36081,12 +36102,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3672;
+      break L3673;
      }
     }
    }
   } while (0);
-  if (label == 3199) {
+  if (label == 3200) {
    label = 0;
    if ($42) {
     var $__a_2 = $__a_0;
@@ -36196,9 +36217,9 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  } while (0);
  var $176;
  var $177 = ($176 | 0) == 0;
- L3728 : do {
+ L3729 : do {
   if ($135) {
-   label = 3243;
+   label = 3244;
   } else {
    do {
     if ((HEAP32[$136 + 12 >> 2] | 0) == (HEAP32[$136 + 16 >> 2] | 0)) {
@@ -36206,21 +36227,21 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       break;
      }
      HEAP32[$21 >> 2] = 0;
-     label = 3243;
-     break L3728;
+     label = 3244;
+     break L3729;
     }
    } while (0);
    if (!($177 ^ ($136 | 0) == 0)) {
-    label = 3245;
+    label = 3246;
    }
   }
  } while (0);
- if (label == 3243) {
+ if (label == 3244) {
   if ($177) {
-   label = 3245;
+   label = 3246;
   }
  }
- if (label == 3245) {
+ if (label == 3246) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
  HEAP32[$agg_result >> 2] = $176;
@@ -36334,10 +36355,10 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $4 = HEAP32[$__iob + 4 >> 2] & 74;
  if (($4 | 0) == 8) {
   var $_0_i = 16;
- } else if (($4 | 0) == 0) {
-  var $_0_i = 0;
  } else if (($4 | 0) == 64) {
   var $_0_i = 8;
+ } else if (($4 | 0) == 0) {
+  var $_0_i = 0;
  } else {
   var $_0_i = 10;
  }
@@ -36374,7 +36395,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  var $24 = HEAP8[$__thousands_sep];
  var $__a_0 = $18;
  var $25 = HEAP32[$20 >> 2];
- L3788 : while (1) {
+ L3789 : while (1) {
   var $25;
   var $__a_0;
   do {
@@ -36398,7 +36419,7 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
   var $43 = HEAP32[$21 >> 2];
   do {
    if (($43 | 0) == 0) {
-    label = 3298;
+    label = 3299;
    } else {
     if ((HEAP32[$43 + 12 >> 2] | 0) != (HEAP32[$43 + 16 >> 2] | 0)) {
      if ($42) {
@@ -36409,12 +36430,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3788;
+      break L3789;
      }
     }
     if ((FUNCTION_TABLE[HEAP32[HEAP32[$43 >> 2] + 36 >> 2]]($43) | 0) == -1) {
      HEAP32[$21 >> 2] = 0;
-     label = 3298;
+     label = 3299;
      break;
     } else {
      if ($42) {
@@ -36425,12 +36446,12 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       var $__a_2 = $__a_0;
       var $136 = $43;
       var $135 = 0;
-      break L3788;
+      break L3789;
      }
     }
    }
   } while (0);
-  if (label == 3298) {
+  if (label == 3299) {
    label = 0;
    if ($42) {
     var $__a_2 = $__a_0;
@@ -36542,9 +36563,9 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
  } while (0);
  var $176;
  var $177 = ($176 | 0) == 0;
- L3844 : do {
+ L3845 : do {
   if ($135) {
-   label = 3342;
+   label = 3343;
   } else {
    do {
     if ((HEAP32[$136 + 12 >> 2] | 0) == (HEAP32[$136 + 16 >> 2] | 0)) {
@@ -36552,21 +36573,21 @@ function __ZNKSt3__17num_getIcNS_19istreambuf_iteratorIcNS_11char_traitsIcEEEEE6
       break;
      }
      HEAP32[$21 >> 2] = 0;
-     label = 3342;
-     break L3844;
+     label = 3343;
+     break L3845;
     }
    } while (0);
    if (!($177 ^ ($136 | 0) == 0)) {
-    label = 3344;
+    label = 3345;
    }
   }
  } while (0);
- if (label == 3342) {
+ if (label == 3343) {
   if ($177) {
-   label = 3344;
+   label = 3345;
   }
  }
- if (label == 3344) {
+ if (label == 3345) {
   HEAP32[$__err >> 2] = HEAP32[$__err >> 2] | 2;
  }
  HEAP32[$agg_result >> 2] = $176;
@@ -70574,7 +70595,7 @@ Module['FS_createPath']('/', 'meshes', true, true);
     var PACKAGE_PATH = window['encodeURIComponent'](window.location.pathname.toString().substring(0, window.location.pathname.toString().lastIndexOf('/')) + '/');
     var PACKAGE_NAME = 'build/recast.emcc.data';
     var REMOTE_PACKAGE_NAME = 'recast.emcc.data';
-    var PACKAGE_UUID = '50b9e5d5-c6b5-4dc7-84ba-47ba4d63c4e8';
+    var PACKAGE_UUID = '7f0d29e4-8770-42a3-8a6d-b68b201c2ebe';
     function fetchRemotePackage(packageName, callback, errback) {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', packageName, true);
