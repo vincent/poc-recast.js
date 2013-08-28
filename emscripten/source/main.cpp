@@ -425,7 +425,7 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 		dtPolyRef straightPathRefs[MAX_STEER_POINTS];
 		int straightPathCount = 0;
 
-		int maxStraightPath = maxPath * 10;
+		int maxStraightPath = maxPath;
 		int options = 0;
 
 		/// Finds the straight path from the start to the end position within the polygon corridor.
@@ -454,8 +454,9 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
 
 				// why ?
-				if (!(fabs(v[0]) < 0.000001f && fabs(v[1]) < 0.000001f && fabs(v[2]) < 0.000001f)) {
+				if (!(fabs(v[0]) < 0.0000001f && fabs(v[1]) < 0.0000001f && fabs(v[2]) < 0.0000001f)) {
 					sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
+					emscripten_log(buff);					
 					emscripten_run_script(buff);
 				} else {
 					sprintf(buff, "ignore %f, %f, %f", v[0], v[1], v[2]);
