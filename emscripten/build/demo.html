@@ -429,6 +429,8 @@
                         } else {
                         	clickedPostions[1] = i_pos;
 
+                        	console.log('find a path between %o and %o', clickedPostions[0], clickedPostions[1]);
+
                         	// run the magic
                         	Module.findPath(
                         		clickedPostions[0].x, clickedPostions[0].y, clickedPostions[0].z,

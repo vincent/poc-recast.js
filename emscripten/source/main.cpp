@@ -390,8 +390,8 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 	int pathCount;
 
 	dtQueryFilter filter;
-	// filter.setIncludeFlags(3);
-	// filter.setExcludeFlags(0);
+	filter.setIncludeFlags(3);
+	filter.setExcludeFlags(0);
 
 	// Change costs.
 	// filter.setAreaCost(SAMPLE_POLYAREA_GROUND, 1.0f);
@@ -453,8 +453,14 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 				const float* v = &straightPath[i*3];
 				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
 
-				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
-				emscripten_run_script(buff);
+				// why ?
+				if (!(fabs(v[0]) < 0.000001f && fabs(v[1]) < 0.000001f && fabs(v[2]) < 0.000001f)) {
+					sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
+					emscripten_run_script(buff);
+				} else {
+					sprintf(buff, "ignore %f, %f, %f", v[0], v[1], v[2]);
+					emscripten_log(buff);					
+				}
 			}
 		}
 	}
