@@ -394,12 +394,12 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 	// filter.setExcludeFlags(0);
 
 	// Change costs.
-	filter.setAreaCost(SAMPLE_POLYAREA_GROUND, 1.0f);
-	filter.setAreaCost(SAMPLE_POLYAREA_WATER, 10.0f);
-	filter.setAreaCost(SAMPLE_POLYAREA_ROAD, 1.0f);
-	filter.setAreaCost(SAMPLE_POLYAREA_DOOR, 1.0f);
-	filter.setAreaCost(SAMPLE_POLYAREA_GRASS, 2.0f);
-	filter.setAreaCost(SAMPLE_POLYAREA_JUMP, 1.5f);
+	// filter.setAreaCost(SAMPLE_POLYAREA_GROUND, 1.0f);
+	// filter.setAreaCost(SAMPLE_POLYAREA_WATER, 10.0f);
+	// filter.setAreaCost(SAMPLE_POLYAREA_ROAD, 1.0f);
+	// filter.setAreaCost(SAMPLE_POLYAREA_DOOR, 1.0f);
+	// filter.setAreaCost(SAMPLE_POLYAREA_GRASS, 2.0f);
+	// filter.setAreaCost(SAMPLE_POLYAREA_JUMP, 1.5f);
 
 	float nearestStartPos[3];
 	dtPolyRef startRef = 0;
@@ -414,39 +414,47 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 	findStatus = m_navQuery->findPath(startRef, endRef, nearestStartPos, nearestEndPos, &filter, path, &pathCount, maxPath);
 
 	if (dtStatusFailed(findStatus)) {
-		printf("Cannot find nearestPoly: %u\n", findStatus);
+		printf("Cannot find a path: %u\n", findStatus);
 
 	} else {
 		printf("Found a %u polysteps path \n", pathCount);
 
-		const dtMeshTile* tile;
-		const dtPoly* poly;
-		float* polyCenter;
+		const int MAX_STEER_POINTS = 3;
+		float straightPath[MAX_STEER_POINTS*3];
+		unsigned char straightPathFlags[MAX_STEER_POINTS];
+		dtPolyRef straightPathRefs[MAX_STEER_POINTS];
+		int straightPathCount = 0;
 
-		for (int i = 0; i < pathCount; i++) {
-			findStatus = m_navMesh->getTileAndPolyByRef(path[i], &tile, &poly);
+		int maxStraightPath = maxPath * 10;
+		int options = 0;
 
-			if (dtStatusFailed(findStatus)) {
-				printf("Cannot getTileAndPolyByRef: %u\n", findStatus);
+		/// Finds the straight path from the start to the end position within the polygon corridor.
+		///  @param[in]		startPos			Path start position. [(x, y, z)]
+		///  @param[in]		endPos				Path end position. [(x, y, z)]
+		///  @param[in]		path				An array of polygon references that represent the path corridor.
+		///  @param[in]		pathSize			The number of polygons in the @p path array.
+		///  @param[out]	straightPath		Points describing the straight path. [(x, y, z) * @p straightPathCount].
+		///  @param[out]	straightPathFlags	Flags describing each point. (See: #dtStraightPathFlags) [opt]
+		///  @param[out]	straightPathRefs	The reference id of the polygon that is being entered at each point. [opt]
+		///  @param[out]	straightPathCount	The number of points in the straight path.
+		///  @param[in]		maxStraightPath		The maximum number of points the straight path arrays can hold.  [Limit: > 0]
+		///  @param[in]		options				Query options. (see: #dtStraightPathOptions)
+		/// @returns The status flags for the query.
+		findStatus = m_navQuery->findStraightPath(nearestStartPos, nearestEndPos, path, pathCount, straightPath,
+									straightPathFlags, straightPathRefs, &straightPathCount, maxStraightPath, options);
 
-			} else {
-				sprintf(buff, "__tmp_recastjs_data[%u] = [];", i);
+		if (dtStatusFailed(findStatus)) {
+			printf("Cannot find a straight path: %u\n", findStatus);
+
+		} else {
+			printf("Found a %u steps path \n", straightPathCount);
+
+			for (int i = 0; i < straightPathCount; i++) {
+				const float* v = &straightPath[i*3];
+				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
+
+				sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
 				emscripten_run_script(buff);
-
-				// sprintf(buff, "__tmp_recastjs_data[%u].push({ vertCount:%u, polyCount:%u, detailTriCount:%u , detailVertCount:%u });", path[i], tile->header->vertCount, tile->header->polyCount, tile->header->detailTriCount, tile->header->detailVertCount);
-				// emscripten_run_script(buff);
-
-				// dtCalcPolyCenter(polyCenter, poly->verts, (int)poly->vertCount, tile->verts);
-				//printf(" poly #%u center is (%f, %f, %f) \n", i, polyCenter[0], polyCenter[1], polyCenter[2]);
-
-				for (int j = 0; j < (int)poly->vertCount; ++j)
-				{
-					const float* v = &tile->verts[poly->verts[j]*3];
-					// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
-
-					sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", i, v[0], v[1], v[2]);
-					emscripten_run_script(buff);
-				}
 			}
 		}
 	}

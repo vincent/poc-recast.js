@@ -111,13 +111,13 @@
 			}
 			function lineFromVertices(vertices, mat_options) {
 				console.log('%o vertices line', vertices.length);
-				var materials = new THREE.LineBasicMaterial(mat_options);
+				var material = new THREE.LineBasicMaterial(mat_options);
 				var geometry = new THREE.Geometry();
 				for (var i = 0; i < vertices.length; i++) {
 					geometry.vertices.push(vertices[i]);
 				}
 				var line = new THREE.Line(geometry, material);
-				return object;
+				return line;
 			}
    		</script>
 
@@ -466,27 +466,25 @@
 				}
 			};
 
-			window.__drawPath = function(polyPath) {
+			window.__drawPath = function(path) {
 				if (window.__path) {
 					scene.remove(window.__path);
 				}
 
-				window.__path = new THREE.Object3D();
-				for (var step = 0; step < polyPath.length; step++) {
-					var poly = meshFromVertices(polyPath[step], {
-						color: 0x0000ff,
-						ambient: 0x0000ff,
-						side: THREE.DoubleSide,
-						wireframe: false,
-						transparent: true,
-						opacity: 0.5
-					});
-					window.__path.add(poly);
-				}
+				window.__path = lineFromVertices(path, {
+					color: 0x00ff00,
+					ambient: 0x00ff00,
+					side: THREE.DoubleSide,
+					wireframe: false,
+					transparent: true,
+					opacity: 0.5
+				});
 
-				scene.add(window.__path);
+				if (window.__path) {
+					scene.add(window.__path);
+				}
 			};
-			
+
 			//
 
 			function animate() {
