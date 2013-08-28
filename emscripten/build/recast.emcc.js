@@ -70574,7 +70574,7 @@ Module['FS_createPath']('/', 'meshes', true, true);
     var PACKAGE_PATH = window['encodeURIComponent'](window.location.pathname.toString().substring(0, window.location.pathname.toString().lastIndexOf('/')) + '/');
     var PACKAGE_NAME = 'build/recast.emcc.data';
     var REMOTE_PACKAGE_NAME = 'recast.emcc.data';
-    var PACKAGE_UUID = 'e1bc6112-4b6d-47be-8bb4-dcc7faa035b3';
+    var PACKAGE_UUID = '50b9e5d5-c6b5-4dc7-84ba-47ba4d63c4e8';
     function fetchRemotePackage(packageName, callback, errback) {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', packageName, true);
