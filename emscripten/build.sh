@@ -46,10 +46,10 @@ export FILES='../src_cpp/DebugUtils/Source/DebugDraw.cpp
 			  ../src_cpp/RecastDemo/Source/Sample_Debug.cpp
 			  ../src_cpp/RecastDemo/Source/Sample_SoloMesh.cpp
 			  ../src_cpp/RecastDemo/Source/Sample_TileMesh.cpp
-			  ../src_cpp/RecastDemo/Source/SampleInterfaces.cpp
 			  ../src_cpp/RecastDemo/Source/ValueHistory.cpp
 			  source/main.cpp'
 
+#			  ../src_cpp/RecastDemo/Source/SampleInterfaces.cpp
 #			  ../src_cpp/RecastDemo/Source/Sample_TempObstacles.cpp
 
 export FLAGS='-v'

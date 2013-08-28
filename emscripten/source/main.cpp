@@ -7,13 +7,18 @@
 
 #include <Recast.h>
 #include <InputGeom.h>
-#include <SampleInterfaces.h>
 #include <DetourNavMesh.h>
+#include <DetourCommon.h>
 #include <DetourNavMeshQuery.h>
 #include <DetourNavMeshBuilder.h>
 #include <DetourCrowd.h>
 
+#include <RecastDebugDraw.h>
+#include <DetourDebugDraw.h>
+
 #include <emscripten.h>
+
+#include "ThreejsInterface.cpp"
 
 static const int MAX_POLYS = 256;
 
@@ -125,7 +130,7 @@ DrawMode m_drawMode;
 
 BuildContext* m_ctx;
 
-
+DebugDrawGL* dd;
 
 
 ////////////////////////////
@@ -141,6 +146,8 @@ int getAreasCount(int i)
 void getAreaVerts(int i)
 {
 }
+
+/////////////////////////////////
 
 void debugConfig()
 {
@@ -165,6 +172,22 @@ void debugConfig()
 
 	printf(" m_detailSampleDist=%f \n", m_detailSampleDist);
 	printf(" m_detailSampleMaxError=%f \n", m_detailSampleMaxError);
+}
+
+void debugDrawNavMesh(unsigned char flags) {
+	duDebugDrawNavMesh(dd, *m_navMesh, flags);
+}
+void debugDrawNavMeshPortals() {
+	duDebugDrawNavMeshPortals(dd, *m_navMesh);
+}
+void debugDrawRegionConnections() {
+	duDebugDrawRegionConnections(dd, *m_cset, 0.5f);
+}
+void debugDrawRawContours() {
+	duDebugDrawRawContours(dd, *m_cset, 0.5f);
+}
+void debugDrawContours() {
+	duDebugDrawContours(dd, *m_cset, 0.5f);
 }
 
 ////////////////////////////
@@ -367,8 +390,16 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 	int pathCount;
 
 	dtQueryFilter filter;
-	filter.setIncludeFlags(3);
-	filter.setExcludeFlags(0);
+	// filter.setIncludeFlags(3);
+	// filter.setExcludeFlags(0);
+
+	// Change costs.
+	filter.setAreaCost(SAMPLE_POLYAREA_GROUND, 1.0f);
+	filter.setAreaCost(SAMPLE_POLYAREA_WATER, 10.0f);
+	filter.setAreaCost(SAMPLE_POLYAREA_ROAD, 1.0f);
+	filter.setAreaCost(SAMPLE_POLYAREA_DOOR, 1.0f);
+	filter.setAreaCost(SAMPLE_POLYAREA_GRASS, 2.0f);
+	filter.setAreaCost(SAMPLE_POLYAREA_JUMP, 1.5f);
 
 	float nearestStartPos[3];
 	dtPolyRef startRef = 0;
@@ -386,10 +417,11 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 		printf("Cannot find nearestPoly: %u\n", findStatus);
 
 	} else {
-		printf("Found a %u steps path \n", pathCount);
+		printf("Found a %u polysteps path \n", pathCount);
 
 		const dtMeshTile* tile;
 		const dtPoly* poly;
+		float* polyCenter;
 
 		for (int i = 0; i < pathCount; i++) {
 			findStatus = m_navMesh->getTileAndPolyByRef(path[i], &tile, &poly);
@@ -398,15 +430,21 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 				printf("Cannot getTileAndPolyByRef: %u\n", findStatus);
 
 			} else {
+				sprintf(buff, "__tmp_recastjs_data[%u] = [];", i);
+				emscripten_run_script(buff);
+
 				// sprintf(buff, "__tmp_recastjs_data[%u].push({ vertCount:%u, polyCount:%u, detailTriCount:%u , detailVertCount:%u });", path[i], tile->header->vertCount, tile->header->polyCount, tile->header->detailTriCount, tile->header->detailVertCount);
 				// emscripten_run_script(buff);
+
+				// dtCalcPolyCenter(polyCenter, poly->verts, (int)poly->vertCount, tile->verts);
+				//printf(" poly #%u center is (%f, %f, %f) \n", i, polyCenter[0], polyCenter[1], polyCenter[2]);
 
 				for (int j = 0; j < (int)poly->vertCount; ++j)
 				{
 					const float* v = &tile->verts[poly->verts[j]*3];
 					// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
 
-					sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
+					sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", i, v[0], v[1], v[2]);
 					emscripten_run_script(buff);
 				}
 			}
@@ -452,6 +490,8 @@ bool initWithFile()
 
 bool build()
 {
+	dd = new DebugDrawGL;
+
 	if (!m_geom || !m_geom->getMesh())
 	{
 		printf("buildNavigation: Input mesh is not specified.");
@@ -866,5 +906,12 @@ EMSCRIPTEN_BINDINGS(my_module) {
 	function("set_vertsPerPoly", &set_vertsPerPoly);
 	function("set_detailSampleDist", &set_detailSampleDist);
 	function("set_detailSampleMaxError", &set_detailSampleMaxError);
+
+
+	function("debugDrawNavMesh", &debugDrawNavMesh);
+	function("debugDrawNavMeshPortals", &debugDrawNavMeshPortals);
+	function("debugDrawRegionConnections", &debugDrawRegionConnections);
+	function("debugDrawRawContours", &debugDrawRawContours);
+	function("debugDrawContours", &debugDrawContours);
 
 }
