@@ -11,16 +11,15 @@ To use RecastDetour primitives against a mesh, likely a Three.js mesh
 Whooaa ! Is it working ?
 ===
 
-Not yet
+Heighmap, NavigationMesh and Pathfinding are working.
 
 Howto
 ===
 
 * have a running Emscripten environement
-* build library bootstrap with ```./build.sh recast.emcc.js``` 
- - open ```build/demo.html```
- - use the preloaded file test_nav.obj with ```initWithFile```
- - build the heightmap and stuff with ```initWithFile```
- - draw the navigation mesh with ```initWithFile```, this is the ~ equivalent of ```rcDebugDrawPolyMesh```
+* build library bootstrap with ```./build.sh build/recast.emcc.js``` 
+ - open ```build/demo.html``` or ```build/demo_player.html```
+ - click on ```init```
+ - right-click on the mesh to define start and destination
 
 
