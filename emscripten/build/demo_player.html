@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Three.js webgl - RecastDetour</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button {
+				color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer
+			}
+			#loading {
+				position: absolute;
+				display: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<img id="loading" src="loading.gif">
+
+		<canvas id="canvas" style="display:none"></canvas>
+
+		<script src="../build/three.min.js"></script>
+        <script src="../build/tween.min.js"></script>
+
+        <script src='js/MD2CharacterComplex.js'></script>
+
+		<script src="js/loaders/OBJLoader.js"></script>
+        <script src="js/controls/TrackballControls.js"></script>
+		<script src="js/geometries/ConvexGeometry.js"></script>
+
+		<script src="js/Detector.js"></script>
+		<script src="js/libs/stats.min.js"></script>
+		<script src='js/libs/dat.gui.min.js'></script>
+
+
+	    <script type='text/javascript'>
+	      // have to exist
+		  window._getThreeJSMeshes = function(){ };
+
+	      // connect to canvas
+	      var Module = {
+	        preRun: [],
+	        postRun: [],
+	        print: (function() {
+	          return function(text) {
+	            text = Array.prototype.slice.call(arguments).join(' ');
+	            // These replacements are necessary if you render to raw HTML
+	            //text = text.replace(/&/g, "&amp;");
+	            //text = text.replace(/</g, "&lt;");
+	            //text = text.replace(/>/g, "&gt;");
+	            //text = text.replace('\n', '<br>', 'g');
+	            console.log(text);
+	            return;
+	          };
+	        })(),
+	        printErr: function(text) {
+	          text = Array.prototype.slice.call(arguments).join(' ');
+	          if (0) { // XXX disabled for safety typeof dump == 'function') {
+	            dump(text + '\n'); // fast, straight to the real console
+	          } else {
+	            console.log(text);
+	          }
+	        },
+	        canvas: document.getElementById('canvas'),
+	        setStatus: function(text) {
+	        },
+	        totalDependencies: 0,
+	        monitorRunDependencies: function(left) {
+	          this.totalDependencies = Math.max(this.totalDependencies, left);
+	          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+	        }
+	      };
+	      Module.setStatus('Downloading...');
+	    </script>
+   		<script src="recast.emcc.js"></script>
+
+   		<script type="text/javascript">
+			function build() {
+				var loading = document.getElementById('loading');
+				loading.style.display = 'block';
+				Module.build();
+				loading.style.display = 'none';
+			}
+			function meshFromVertices(vertices, mat_options) {
+				console.log('%o vertices object', vertices.length);
+
+				var object = new THREE.Object3D();
+				var materials = [ new THREE.MeshBasicMaterial(mat_options) ];
+
+				for (var i = 0; i < vertices.length; i++) {
+					if (!vertices[i+2]) break;
+					var child = THREE.SceneUtils.createMultiMaterialObject(
+						new THREE.ConvexGeometry([ vertices[i], vertices[i+1], vertices[i+2] ]),
+						materials);
+					object.add(child);
+				}
+				return object;
+			}
+			function lineFromVertices(vertices, mat_options) {
+				console.log('%o vertices line', vertices.length);
+				var material = new THREE.LineBasicMaterial(mat_options);
+				var geometry = new THREE.Geometry();
+				for (var i = 0; i < vertices.length; i++) {
+					geometry.vertices.push(vertices[i]);
+				}
+				var line = new THREE.Line(geometry, material);
+				return line;
+			}
+   		</script>
+
+		<script>
+			var container, stats;
+
+			var camera, scene, renderer, cameraControls;
+
+			var agent;
+
+			var ground, helper;
+
+			var clickedPostions = [undefined, undefined];
+
+			var mouseX = 0, mouseY = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+            var clock = new THREE.Clock();
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 20000 );
+				camera.position.set(-57.12, 41.1, -34.62);
+
+				// scene
+
+				scene = new THREE.Scene();
+
+				// Axis helper
+				var object = new THREE.AxisHelper( 100 );
+				object.position.set(0, 0, 0);
+				scene.add(object);
+
+                // Intersections helper
+                var geometry = new THREE.CylinderGeometry( 0, 1, 1, 3 );
+                geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, 0 ) );
+                geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
+                helper = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() );
+                scene.add(helper);
+
+                // Agent
+                var configOgro = {
+                    baseUrl: "models/animated/ogro/",
+                    body: "ogro-light.js",
+                    skins: [
+                        // "grok.jpg",
+                        // "ogrobase.png",
+                        // "arboshak.png",
+                        // "ctf_r.png",
+                        // "ctf_b.png",
+                        // "darkam.png",
+                        // "freedom.png",
+                        // "gib.png",
+                        // "gordogh.png",
+                        // "igdosh.png",
+                        // "khorne.png",
+                        // "nabogro.png",
+                        "sharokh.png"
+                    ],
+                    weapons:  [ [ "weapon-light.js", "weapon.jpg" ] ],
+                    animations: {
+                        move: "run",
+                        idle: "stand",
+                        jump: "jump",
+                        attack: "attack",
+                        crouchMove: "cwalk",
+                        crouchIdle: "cstand",
+                        crouchAttach: "crattack"
+                    },
+                    walkSpeed: 350,
+                    crouchSpeed: 175
+                };
+
+                var nRows = 1;
+                var nSkins = configOgro.skins.length;
+
+                nCharacters = nSkins * nRows;
+
+                character = new THREE.MD2CharacterComplex();
+                character.scale = .08;
+                character.controls = {
+	                moveForward: false,
+	                moveBackward: false,
+	                moveLeft: false,
+	                moveRight: false
+	            };
+
+                var baseCharacter = new THREE.MD2CharacterComplex();
+                baseCharacter.scale = 1;
+
+                baseCharacter.onLoadComplete = function () {
+                    character.shareParts( baseCharacter );
+                    character.enableShadows( true );
+
+                    // disable speed
+                    character.maxSpeed = 
+                    character.maxReverseSpeed = 
+                    character.frontAcceleration = 
+                    character.backAcceleration = 
+                    character.frontDecceleration = 
+                    character.angularSpeed = 0;
+                    character.setWeapon( 0 );
+                    character.setSkin( 0 );
+
+                    character.root.position.x = 0;
+                    character.root.position.y = 12;
+                    character.root.position.z = 0;
+
+                    scene.add(character.root);
+                };
+
+                baseCharacter.loadParts( configOgro );
+
+                // Lights
+
+				var ambient = new THREE.AmbientLight( 0x404040 );
+				scene.add( ambient );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
+
+				// texture
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+
+				// model
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'obj/nav_test.obj', function ( object ) {
+					ground = object;
+
+					/*
+					ground.traverse( function ( child ) {
+						if ( child instanceof THREE.Mesh ) {
+							child.material.map = texture;
+						}
+					} );
+					*/
+
+					window._getThreeJSMeshes = function(){
+						Module.bareGeomInit()
+						ground.traverse( function ( child ) {
+							if ( child instanceof THREE.Mesh ) {
+								child.geometry.vertices.forEach(function(vert){
+									Module.bareGeomAddVertex(vert.x, vert.y, vert.z, 0);
+								});
+								child.geometry.faces.forEach(function(face){
+									Module.bareGeomAddTriangle(face.a, face.b, face.c, 0);
+								});
+							}
+						} );
+						Module.bareGeomValidate()						
+					};
+
+					scene.add( ground );
+					console.log('OBJECT ADDED', ground);
+				});
+
+				//
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'resize', onWindowResize, false );
+
+                // CONTROLS
+
+                cameraControls = new THREE.TrackballControls( camera, renderer.domElement );
+                cameraControls.target.set( 0, 50, 0 );
+
+				// GUI
+
+				window.Config = {
+					cellSize: 0.8,
+					_cellSize: [ 0.01, 10.0 ],
+
+					cellHeight: 0.8,
+					_cellHeight: [ 0.1, 5.0 ],
+
+					agentHeight: 2.0,
+					_agentHeight: [ 0.01, 5.0 ],
+
+					agentRadius: 0.5,
+					_agentRadius: [ 0.01, 5.0 ],
+
+					agentMaxClimb: 4.0,
+					_agentMaxClimb: [ 0.5, 5.0 ],
+
+					agentMaxSlope: 30.0,
+					_agentMaxSlope: [ 0.5, 90.0 ],
+
+					regionMinSize: 1.0,
+					_regionMinSize: [ 1.0, 150.0 ],
+
+					regionMergeSize: 1.0,
+					_regionMergeSize: [ 1.0, 150.0 ],
+
+					monotonePartitioning: false,
+					_monotonePartitioning: [ true, false ],
+
+					edgeMaxLen: 0.1,
+					_edgeMaxLen: [ 0.1, 50.0 ],
+
+					edgeMaxError: 1.0,
+					_edgeMaxError: [ 0.1, 3.0 ],
+					
+					//vertsPerPoly: 3.0,
+					//vertsPerPoly: [ 3.0, 12.0 ],		
+
+					detailSampleDist: 0.0,
+					_detailSampleDist: [ 0.0, 16.0 ],
+
+					detailSampleMaxError: 8.0,
+					_detailSampleMaxError: [ 8.0, 16.0 ],
+
+					Next: 'Init OBJ',
+
+					initFromThreeJS: function() {
+						Module.init();
+						Config.Next = 'Build heightmap';
+					},
+					
+					init: function() {
+						Module.initWithFile();
+						Config.Next = 'Build heightmap';
+						Module.build();
+					},
+					
+					detailMeshPoly: 0,
+					build: function() {
+						Module.build();
+						Config.Next = 'Draw NavMesh';
+					},
+
+					navMeshWireframe: false,
+					navMeshVertices: 0,
+					drawNavMesh: function() {
+						if (window.navigationMesh) {
+							scene.remove(window.navigationMesh);
+							delete window.navigationMesh;
+
+						} else {
+
+							//  Module.getNavMeshVertices(Runtime.addFunction(function(vertices){
+							window.__tmp_func = function(vertices){
+								Config.navMeshVertices = vertices.length;
+
+								if (window.navigationMesh) {
+									scene.remove(window.navigationMesh);
+								}
+
+								window.navigationMesh = meshFromVertices(vertices, {
+									color: 0xff0000,
+									ambient: 0xff0000,
+									side: THREE.DoubleSide,
+									wireframe: true,
+									transparent: true,
+									opacity: 0.5
+								})
+
+								if (window.navigationMesh) {
+									scene.add(window.navigationMesh);
+								}
+
+								Config.Next = 'Change values, rebuild';
+							};
+							Module.getNavMeshVertices('window.__tmp_func');
+						}
+					},
+
+					drawHeightfieldRegions: function() {
+						//  Module.getNavMeshVertices(Runtime.addFunction(function(vertices){
+						window.__tmp_func = function(vertices){
+							Config.hfRegionsVertices = vertices.length;
+
+							if (window.hfRegionsVertices) {
+								scene.remove(window.hfRegionsVertices);
+							}
+
+							window.hfRegionsVertices = meshFromVertices(vertices, {
+								color: 0xff0000,
+								ambient: 0xff0000,
+								side: THREE.DoubleSide,
+								wireframe: true,
+								transparent: true,
+								opacity: 0.5
+							});
+
+							if (window.hfRegionsVertices) {
+								scene.add(window.hfRegionsVertices);
+							}
+
+							Config.Next = 'Change values, rebuild';
+						};
+						Module.getNavHeightfieldRegions('window.__tmp_func');
+					},
+				};
+
+				gui = new dat.GUI();
+				gui.add(Config, 'Next').listen();
+				gui.add(Config, 'init');
+				gui.add(Config, 'build');
+				gui.add(Config, 'detailMeshPoly').listen();
+				gui.add(Config, 'drawNavMesh');
+				//gui.add(Config, 'drawHeightfieldRegions');
+
+				gui.add(Config, 'navMeshVertices', 0, 10000).listen();
+
+				[	'cellSize', 'cellHeight', 'agentHeight', 'agentRadius', 'agentMaxClimb',
+					'agentMaxSlope', 'regionMinSize', 'regionMergeSize', 'monotonePartitioning',
+					'edgeMaxLen', 'edgeMaxError', 'detailSampleDist', 'detailSampleMaxError'
+				].forEach(function(s) {
+					gui.add(Config, s, Config['_'+s][0], Config['_'+s][1] ).onFinishChange(function(){
+						Module['set_' + s]( Config[s] );
+						Config.Next = 'Please wait';
+						Module.build();
+						Config.Next = 'Change values, rebuild';
+					});
+				});
+			}
+
+			function onWindowResize() {
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+            function onDocumentMouseUp(event) {
+                //event.preventDefault();
+
+                switch (event.button) {
+                    case 2: 
+                      var vector = new THREE.Vector3(
+                         (event.clientX / window.innerWidth) * 2 - 1,
+                        -(event.clientY / window.innerHeight) * 2 + 1,
+                        camera.near
+                      );
+                      
+                      var projector = new THREE.Projector();
+                      projector.unprojectVector(vector, camera);
+
+                      var raycaster = new THREE.Raycaster(camera.position,vector.sub(camera.position).normalize());
+
+                      var intersects = raycaster.intersectObjects(ground.children[0].children);
+
+                      if (intersects.length > 0) {
+
+                      	var i_pos = intersects[0].point;
+
+						console.log('intersect at %o %o', i_pos.x, i_pos.y, i_pos.z );
+
+                        // place helper
+                        helper.position.set(0, 0, 0);
+                        helper.lookAt(intersects[0].face.normal);
+                        helper.position.copy(i_pos);
+
+
+                    	console.log('find a path between %o and %o', character.root.position, i_pos);
+
+                    	// run the magic
+                    	Module.findPath(
+                    		character.root.position.x, character.root.position.y, character.root.position.z,
+                    	  	i_pos.x, i_pos.y, i_pos.z,
+                    	  	10000,
+                    	  	'window.moveAlong'
+                    	);
+
+                      } else {
+                          console.log('no intersect');
+                      }
+                      break; 
+
+                }
+            }
+
+			window.__debug_start_poly = function(vertices){
+				if (window._start_poly) {
+					scene.remove(window._start_poly);
+				}
+
+				window._start_poly = meshFromVertices(vertices, {
+					color: 0x00ff00,
+					ambient: 0x00ff00,
+					side: THREE.DoubleSide,
+					wireframe: true,
+					transparent: true,
+					opacity: 0.5
+				});
+
+				if (window._start_poly) {
+					scene.add(window._start_poly);
+				}
+			};
+
+			window.__drawPath = function(path) {
+				if (window.__path) {
+					scene.remove(window.__path);
+				}
+
+				window.__path = lineFromVertices(path, {
+					color: 0x00ff00,
+					ambient: 0x00ff00,
+					side: THREE.DoubleSide,
+					wireframe: false,
+					transparent: true,
+					opacity: 0.5
+				});
+
+				if (window.__path) {
+					scene.add(window.__path);
+				}
+			};
+
+
+			window.moveAlong = function(linepoints) {
+
+				var endpoint = linepoints[linepoints.length-1];
+				var smoothness = 100;
+
+				// array of vectors to determine shape
+				var shape = new THREE.SplineCurve3( linepoints );
+
+	            if (character.currentTween) {
+	                character.currentTween.stop();
+	            }
+                character.currentTween = new TWEEN.Tween({ distance:0 })
+                    .to({ distance:1 }, shape.getLength() * 90) // use 
+	                .easing(TWEEN.Easing.Linear.None)
+	                .onStart(function(){
+	                    character.controls.moveForward = true;
+	                })
+	                .onComplete(function(){
+	                    character.controls.moveForward = false;
+	                })
+	                .onUpdate(function(){
+						// get the position data half way along the path
+						var pathPosition = shape.getPoint(this.distance);
+
+						// get the orientation angle quarter way along the path
+						var tangent = shape.getTangent(this.distance);
+						var angle = Math.atan2(-tangent.z, tangent.x);
+
+						// set angle of the man at that position
+						// character.root.rotation.y = angle;
+						character.meshes.forEach(function(m){
+							m.rotation.y = angle;
+						});
+						// character.root.updateMatrix();
+						//character.root.lookAt(pathPosition);
+
+						// move the man to that position
+						character.root.position.set(pathPosition.x, pathPosition.y + 1.8, pathPosition.z);
+
+						character.root.updateMatrix();
+
+	                })
+	                .start();
+			};
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+			function render() {
+                TWEEN.update();
+
+                var delta = clock.getDelta();
+                cameraControls.update( delta );
+
+				//camera.position.x += ( mouseX - camera.position.x ) * 2;
+				//camera.position.y += ( mouseY - camera.position.y - 50) * .2;
+
+                character.update( delta );
+
+				camera.lookAt( scene.position );
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>

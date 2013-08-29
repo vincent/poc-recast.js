@@ -37,15 +37,16 @@ dtCrowd* m_crowd;
 
 unsigned char m_navMeshDrawFlags;
 
-float m_cellSize = 0.8f;
-float m_cellHeight = 0.8f;
-
 bool m_keepInterResults = true;
 float m_totalBuildTimeMs;
 
 //// DEFAULTS
-float m_agentHeight = 0.8f;  // , 5.0f, 0.1f);
-float m_agentRadius = 0.8f;  // , 5.0f, 0.1f);
+float m_agentHeight = 2.0f;  // , 5.0f, 0.1f);
+float m_agentRadius = 0.5f;  // , 5.0f, 0.1f);
+
+float m_cellSize = m_agentRadius / 2;
+float m_cellHeight = m_cellSize / 2;
+
 float m_agentMaxClimb = 4.0f;  // , 5.0f, 0.1f);
 float m_agentMaxSlope = 30.0f;  // , 90.0f, 1.0f);
 
@@ -139,14 +140,6 @@ extern "C" {
   extern char* getThreeJSMeshes();
 }
 
-int getAreasCount(int i)
-{
-	return m_pmesh->npolys;
-}
-void getAreaVerts(int i)
-{
-}
-
 /////////////////////////////////
 
 void debugConfig()
@@ -202,6 +195,8 @@ void emscripten_debugger()
 {
 	emscripten_run_script("debugger");
 }
+
+////////////////////////////
 
 void cleanup()
 {
@@ -427,18 +422,6 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 		int maxStraightPath = maxPath;
 		int options = 0;
 
-		/// Finds the straight path from the start to the end position within the polygon corridor.
-		///  @param[in]		startPos			Path start position. [(x, y, z)]
-		///  @param[in]		endPos				Path end position. [(x, y, z)]
-		///  @param[in]		path				An array of polygon references that represent the path corridor.
-		///  @param[in]		pathSize			The number of polygons in the @p path array.
-		///  @param[out]	straightPath		Points describing the straight path. [(x, y, z) * @p straightPathCount].
-		///  @param[out]	straightPathFlags	Flags describing each point. (See: #dtStraightPathFlags) [opt]
-		///  @param[out]	straightPathRefs	The reference id of the polygon that is being entered at each point. [opt]
-		///  @param[out]	straightPathCount	The number of points in the straight path.
-		///  @param[in]		maxStraightPath		The maximum number of points the straight path arrays can hold.  [Limit: > 0]
-		///  @param[in]		options				Query options. (see: #dtStraightPathOptions)
-		/// @returns The status flags for the query.
 		findStatus = m_navQuery->findStraightPath(nearestStartPos, nearestEndPos, path, pathCount, straightPath,
 									straightPathFlags, straightPathRefs, &straightPathCount, maxStraightPath, options);
 
@@ -450,12 +433,10 @@ void findPath(float startPosX, float startPosY, float startPosZ,
 
 			for (int i = 0; i < straightPathCount; ++i) {
 				const float* v = &straightPath[i*3];
-				// sprintf(buff, "__tmp_recastjs_data[%u].push(new THREE.Vector3(%f, %f, %f));", path[i], v[0], v[1], v[2]);
 
 				// why ?
 				if (!(fabs(v[0]) < 0.0000001f && fabs(v[1]) < 0.0000001f && fabs(v[2]) < 0.0000001f)) {
 					sprintf(buff, "__tmp_recastjs_data.push(new THREE.Vector3(%f, %f, %f));", v[0], v[1], v[2]);
-					emscripten_log(buff);					
 					emscripten_run_script(buff);
 				} else {
 					sprintf(buff, "ignore %f, %f, %f", v[0], v[1], v[2]);
