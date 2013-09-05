@@ -36,7 +36,7 @@
 
 		<canvas id="canvas" style="display:none"></canvas>
 
-		<script src="../build/three.min.js"></script>
+		<script src="../build/three.js"></script>
         <script src="../build/tween.min.js"></script>
 
         <script src='js/MD2CharacterComplex.js'></script>
@@ -45,10 +45,65 @@
         <script src="js/controls/TrackballControls.js"></script>
 		<script src="js/geometries/ConvexGeometry.js"></script>
 
+		<script src="js/shaders/BleachBypassShader.js"></script>
+		<script src="js/shaders/ColorCorrectionShader.js"></script>
+		<script src="js/shaders/CopyShader.js"></script>
+		<script src="js/shaders/FXAAShader.js"></script>
+
+		<script src="js/postprocessing/EffectComposer.js"></script>
+		<script src="js/postprocessing/RenderPass.js"></script>
+		<script src="js/postprocessing/ShaderPass.js"></script>
+		<script src="js/postprocessing/MaskPass.js"></script>
+
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
 		<script src='js/libs/dat.gui.min.js'></script>
 
+
+		<script id="fragmentShader" type="x-shader/x-fragment">
+
+			uniform sampler2D dayTexture;
+            uniform sampler2D nightTexture;
+
+            uniform vec3 sunDirection;
+
+			varying vec2 vUv;
+            varying vec3 vNormal;
+
+			void main( void ) {
+				vec3 dayColor = texture2D( dayTexture, vUv ).rgb;
+                vec3 nightColor = texture2D( nightTexture, vUv ).rgb;
+
+                // compute cosine sun to normal so -1 is away from sun and +1 is toward sun.
+                float cosineAngleSunToNormal = dot(normalize(vNormal), sunDirection);
+
+                // sharpen the edge beween the transition
+                cosineAngleSunToNormal = clamp( cosineAngleSunToNormal * 10.0, -1.0, 1.0);
+
+                // convert to 0 to 1 for mixing
+                float mixAmount = cosineAngleSunToNormal * 0.5 + 0.5;
+
+                // Select day or night texture based on mix.
+                vec3 color = mix( nightColor, dayColor, mixAmount );
+
+                gl_FragColor = vec4( color, 1.0 );
+				//gl_FragColor = vec4( mixAmount, mixAmount, mixAmount, 1.0 );
+			}
+		</script>
+		<script id="vertexShader" type="x-shader/x-vertex">
+
+			varying vec2 vUv;
+            varying vec3 vNormal;
+
+			void main()
+			{
+				vUv = uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                vNormal = normalMatrix * normal;
+				gl_Position = projectionMatrix * mvPosition;
+			}
+
+		</script>
 
 	    <script type='text/javascript'>
 	      // have to exist
@@ -89,7 +144,7 @@
 	      };
 	      Module.setStatus('Downloading...');
 	    </script>
-   		<script src="recast.emcc.js"></script>
+   		<script src="recast.emcc.playerdemo.js"></script>
 
    		<script type="text/javascript">
 			function build() {
@@ -128,7 +183,7 @@
 		<script>
 			var container, stats;
 
-			var camera, scene, renderer, cameraControls;
+			var camera, scene, renderer, cameraControls, pointLight;
 
 			var agent;
 
@@ -146,29 +201,31 @@
 			init();
 			animate();
 
-			function init() {
+			function init( ready ) {
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
-				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 20000 );
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.set(-57.12, 41.1, -34.62);
 
 				// scene
 
 				scene = new THREE.Scene();
+				scene.fog = new THREE.FogExp2( 0x0, 0.0055 );
+				//scene.fog = new THREE.Fog( 0x000000, 1, 50 );
 
 				// Axis helper
-				var object = new THREE.AxisHelper( 100 );
-				object.position.set(0, 0, 0);
-				scene.add(object);
+				// var object = new THREE.AxisHelper( 100 );
+				// object.position.set(0, 0, 0);
+				// scene.add(object);
 
                 // Intersections helper
                 var geometry = new THREE.CylinderGeometry( 0, 1, 1, 3 );
                 geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, 0 ) );
                 geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
                 helper = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() );
-                scene.add(helper);
+                // scene.add(helper);
 
                 // Agent
                 var configOgro = {
@@ -222,7 +279,7 @@
 
                 baseCharacter.onLoadComplete = function () {
                     character.shareParts( baseCharacter );
-                    character.enableShadows( true );
+                    //character.enableShadows( true );
 
                     // disable speed
                     character.maxSpeed = 
@@ -235,8 +292,10 @@
                     character.setSkin( 0 );
 
                     character.root.position.x = 0;
-                    character.root.position.y = 12;
+                    character.root.position.y = 1;
                     character.root.position.z = 0;
+
+                    character.root.castShadow = true;
 
                     scene.add(character.root);
                 };
@@ -245,31 +304,71 @@
 
                 // Lights
 
-				var ambient = new THREE.AmbientLight( 0x404040 );
-				scene.add( ambient );
+				var ambientLight = new THREE.AmbientLight( 0xffffff );
+				scene.add( ambientLight );
 
-				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
-				directionalLight.position.set( 0, 0, 1 );
+				pointLight = new THREE.PointLight( 0xffffff, 1.25, 1000 );
+				pointLight.position.set( 0, 0, 600 );
+				scene.add( pointLight );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.castShadow = true;
+				directionalLight.position.set( 0, 10, 0 );
 				scene.add( directionalLight );
 
-				// texture
+				// manager
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
 					console.log( item, loaded, total );
 				};
 
+				// material parameters
+
+				var ambient = 0xaaaaaa, diffuse = 0xbbbbbb, specular = 0x060606, shininess = 30;
+
+				var uniforms;
+				var shader = THREE.ShaderLib[ "normalmap" ];
+				var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+
+				uniforms[ "uNormalScale" ].value.set( 0.8, 0.8 );
+
+				uniforms[ "tNormal" ].value = THREE.ImageUtils.loadTexture( "obj/sc2/textures/Normal.jpg" );
+				uniforms[ "tDiffuse" ].value = THREE.ImageUtils.loadTexture( "obj/dota/dota_map_full_compress2.jpg" );
+				uniforms[ "tSpecular" ].value = THREE.ImageUtils.loadTexture( "obj/sc2/textures/Specular.jpg" );
+
+				uniforms[ "enableAO" ].value = false;
+				uniforms[ "enableDiffuse" ].value = true;
+				uniforms[ "enableSpecular" ].value = true;
+
+				uniforms[ "uDiffuseColor" ].value.setHex( diffuse );
+				uniforms[ "uSpecularColor" ].value.setHex( specular );
+				uniforms[ "uAmbientColor" ].value.setHex( ambient );
+
+				uniforms[ "uShininess" ].value = shininess;
+
+				uniforms[ "wrapRGB" ].value.set( 0.575, 0.5, 0.5 );
+
+				var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, fog: true };
+				var material = new THREE.ShaderMaterial( parameters );
+				// material.wrapAround = true;
+
 				// model
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/nav_test.obj', function ( object ) {
+				loader.load( 'obj/sc2/Mountains.obj', function ( object ) {
 					ground = object;
+					//ground.receiveShadow = true;
 
-					/*
 					ground.traverse( function ( child ) {
 						if ( child instanceof THREE.Mesh ) {
-							child.material.map = texture;
+
+							if (child.parent.name === 'TerrainMes') {
+								// child.material.map = texture;
+								child.material = material;
+								child.geometry.computeVertexNormals();
+								child.geometry.computeTangents();
+							}
 						}
 					} );
-					*/
 
 					window._getThreeJSMeshes = function(){
 						Module.bareGeomInit()
@@ -288,14 +387,49 @@
 
 					scene.add( ground );
 					console.log('OBJECT ADDED', ground);
+
 				});
 
 				//
 
 				renderer = new THREE.WebGLRenderer();
+				// renderer.shadowMapEnabled = true;
+				// renderer.shadowMapSoft = true;
+				// renderer.shadowCameraNear = 3;
+				// renderer.shadowCameraFar = camera.far;
+				// renderer.shadowCameraFov = 50;
+
+				renderer.autoClear = false;
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+				renderer.physicallyBasedShading = true;
+
+				// renderer.shadowMapBias = 0.0039;
+				// renderer.shadowMapDarkness = 0.5;
+				// renderer.shadowMapWidth = window.innerWidth;
+				// renderer.shadowMapHeight = window.innerHeight;
 				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				var renderModel = new THREE.RenderPass( scene, camera );
+				var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
+				var effectColor = new THREE.ShaderPass( THREE.ColorCorrectionShader );
+				effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+
+				effectFXAA.uniforms[ 'resolution' ].value.set( 1 / window.innerWidth, 1 / window.innerHeight );
+				effectBleach.uniforms[ 'opacity' ].value = 0.4;
+				effectColor.uniforms[ 'powRGB' ].value.set( 1.4, 1.45, 1.45 );
+				effectColor.uniforms[ 'mulRGB' ].value.set( 1.1, 1.1, 1.1 );
+				effectFXAA.renderToScreen = true;
+
+				composer = new THREE.EffectComposer( renderer );
+				composer.addPass( renderModel );
+				composer.addPass( effectBleach );
+				composer.addPass( effectColor );
+				composer.addPass( effectFXAA );
+
 				container.appendChild( renderer.domElement );
 
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
 				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
 				document.addEventListener( 'resize', onWindowResize, false );
 
@@ -303,6 +437,7 @@
 
                 cameraControls = new THREE.TrackballControls( camera, renderer.domElement );
                 cameraControls.target.set( 0, 50, 0 );
+                //cameraControls.noRotate = true;
 
 				// GUI
 
@@ -357,7 +492,7 @@
 					},
 					
 					init: function() {
-						Module.initWithFile();
+						Module.initWithFile('/build/obj/sc2/Mountains.obj');
 						Config.Next = 'Build heightmap';
 						Module.build();
 					},
@@ -461,6 +596,18 @@
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function onDocumentKeyDown(event) {
+				//debugger;
+				switch (event.keyCode) {
+					case 37:
+						camera.position.x += 1;
+						break;
+					case 39:
+						camera.position.x -= 1;
+						break;
+				}
 			}
 
             function onDocumentMouseUp(event) {
@@ -613,11 +760,25 @@
 				//camera.position.x += ( mouseX - camera.position.x ) * 2;
 				//camera.position.y += ( mouseY - camera.position.y - 50) * .2;
 
+				// camera.position.copy(character.root.position);
+				// camera.position.y += 20;
+				// camera.position.x -= 25;
+				// camera.position.z -= 25;
+
+				// cameraControls.position0.set(character.root.position);
+				// cameraControls.position0.y += 30;
+				// cameraControls.position0.x -= 25;
+				// cameraControls.position0.z -= 25;
+
                 character.update( delta );
 
-				camera.lookAt( scene.position );
+                pointLight.position.set( character.root.position );
+				pointLight.position.y += 3;
 
-				renderer.render( scene, camera );
+				camera.lookAt( character.root.position );
+
+				//renderer.render( scene, camera );
+				composer.render();
 
 			}
 

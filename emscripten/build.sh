@@ -1,14 +1,15 @@
 #!/bin/sh
  
 export CC='/Users/vincent/Workspace/emscripten/emcc'
-export CFLAGS='--closure 0 -O2 -g -s LINKABLE=0 --bind'
+export CFLAGS='--closure 0 -O2 -g -s LINKABLE=0 -s ALLOW_MEMORY_GROWTH=1 --bind'
 export DEFINES='-D NOT_GCC -D EMSCRIPTEN -D USES_UNIX_DIR'
 export INCLUDES='-I ../src_cpp/Recast/Include 			
 				 -I ../src_cpp/Detour/Include 			
 				 -I ../src_cpp/DetourCrowd/Include 			
 				 -I ../src_cpp/RecastDemo/Include 		
 				 -I ../src_cpp/DebugUtils/Include 		
-				 -I ../src_cpp/DetourTileCache/Include'
+				 -I ../src_cpp/DetourTileCache/Include
+				 -I ./source'
 export FILES='../src_cpp/DebugUtils/Source/DebugDraw.cpp
 			  ../src_cpp/DebugUtils/Source/DetourDebugDraw.cpp
 			  ../src_cpp/DebugUtils/Source/RecastDebugDraw.cpp
@@ -47,13 +48,13 @@ export FILES='../src_cpp/DebugUtils/Source/DebugDraw.cpp
 			  ../src_cpp/RecastDemo/Source/Sample_SoloMesh.cpp
 			  ../src_cpp/RecastDemo/Source/Sample_TileMesh.cpp
 			  ../src_cpp/RecastDemo/Source/ValueHistory.cpp
+			  ../src_cpp/RecastDemo/Source/SampleInterfaces.cpp
 			  source/main.cpp'
 
-#			  ../src_cpp/RecastDemo/Source/SampleInterfaces.cpp
 #			  ../src_cpp/RecastDemo/Source/Sample_TempObstacles.cpp
 
 export FLAGS='-v'
-export PRELOAD='--preload-file meshes/nav_test.obj'
+export PRELOAD='--preload-file meshes/nav_test.obj --preload-file ./build/obj/sc2/dota_simple.obj'
  
 mkdir -p build
  

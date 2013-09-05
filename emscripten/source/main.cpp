@@ -18,7 +18,7 @@
 
 #include <emscripten.h>
 
-#include "ThreejsInterface.cpp"
+#include <SampleInterfaces.h>
 
 static const int MAX_POLYS = 256;
 
@@ -471,11 +471,11 @@ bool init()
 	return getThreeJSMeshes();
 }
 
-bool initWithFile()
+bool initWithFile(std::string filename)
 {
 	printf("loading from file");
 	m_geom = new InputGeom;
-	if (!m_geom || !m_geom->loadMesh(m_ctx, "/meshes/nav_test.obj"))
+	if (!m_geom || !m_geom->loadMesh(m_ctx, filename.c_str()))
 	{
 		printf("cannot load OBJ file \n");
 		return false;		
