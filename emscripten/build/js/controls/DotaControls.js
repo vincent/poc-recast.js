@@ -21,6 +21,8 @@ THREE.DotaControls = function ( object, domElement ) {
 
 	this.activeZoneTime = 300;
 
+	this.activeZoneFactor = 20;
+
 	// disable default target object behavior
 
 	// internals
@@ -136,8 +138,8 @@ THREE.DotaControls = function ( object, domElement ) {
 		var now = (new Date()).getTime();
 
 		var container = this.getContainerDimensions();
-		var activeZoneWidth  = container.size[ 0 ] / 100 * 10;
-		var activeZoneHeight = container.size[ 1 ] / 100 * 10;
+		var activeZoneWidth  = container.size[ 0 ] / 100 * this.activeZoneFactor;
+		var activeZoneHeight = container.size[ 1 ] / 100 * this.activeZoneFactor;
 
 		if (event.pageX > container.size[ 0 ] - activeZoneWidth) {
 

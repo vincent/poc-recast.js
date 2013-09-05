@@ -39,6 +39,9 @@
 		<script src="../build/three.js"></script>
         <script src="../build/tween.min.js"></script>
 
+		<script src="js/Sparks.js"></script>
+        <script src='js/Extras.js'></script>
+
         <script src='js/MD2CharacterComplex.js'></script>
         <script src='js/Proctree.js'></script>
         <script src='js/Proctree.three.js'></script>
@@ -68,50 +71,32 @@
 		<script src="js/libs/stats.min.js"></script>
 		<script src='js/libs/dat.gui.min.js'></script>
 
+		<script id="vertexshader" type="x-shader/x-vertex">
+			attribute float size;
+			attribute vec3 pcolor;
 
-		<script id="fragmentShader" type="x-shader/x-fragment">
+			varying vec3 vColor;
 
-			uniform sampler2D dayTexture;
-            uniform sampler2D nightTexture;
+			void main() {
 
-            uniform vec3 sunDirection;
+				vColor = pcolor;
 
-			varying vec2 vUv;
-            varying vec3 vNormal;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
-			void main( void ) {
-				vec3 dayColor = texture2D( dayTexture, vUv ).rgb;
-                vec3 nightColor = texture2D( nightTexture, vUv ).rgb;
+				gl_PointSize = size * ( 200.0 / length( mvPosition.xyz ) );
 
-                // compute cosine sun to normal so -1 is away from sun and +1 is toward sun.
-                float cosineAngleSunToNormal = dot(normalize(vNormal), sunDirection);
+				gl_Position = projectionMatrix * mvPosition;
 
-                // sharpen the edge beween the transition
-                cosineAngleSunToNormal = clamp( cosineAngleSunToNormal * 10.0, -1.0, 1.0);
-
-                // convert to 0 to 1 for mixing
-                float mixAmount = cosineAngleSunToNormal * 0.5 + 0.5;
-
-                // Select day or night texture based on mix.
-                vec3 color = mix( nightColor, dayColor, mixAmount );
-
-                gl_FragColor = vec4( color, 1.0 );
-				//gl_FragColor = vec4( mixAmount, mixAmount, mixAmount, 1.0 );
 			}
 		</script>
-		<script id="vertexShader" type="x-shader/x-vertex">
 
-			varying vec2 vUv;
-            varying vec3 vNormal;
-
-			void main()
-			{
-				vUv = uv;
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-                vNormal = normalMatrix * normal;
-				gl_Position = projectionMatrix * mvPosition;
+		<script type="x-shader/x-fragment" id="fragmentshader">
+			uniform sampler2D texture;
+			varying vec3 vColor;
+			void main() {
+				vec4 outColor = texture2D( texture, gl_PointCoord );
+				gl_FragColor = outColor * vec4( vColor, 1.0 );
 			}
-
 		</script>
 
 	    <script type='text/javascript'>
@@ -194,6 +179,8 @@
 
 			var camera, scene, renderer, cameraControls, pointLight, directionalLight;
 
+			var startPosition = new THREE.Vector3(-142, 0, 139 );
+
 			var agent;
 
 			var ground, helper;
@@ -218,7 +205,7 @@
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.set(0, 30, 30);
+				camera.position.set( startPosition.x + 20, 50, startPosition.z + 30 );
 				//camera.lookAt(new THREE.Vector3(0, 0, 0));
 				//camera.near = 20;
 
@@ -231,7 +218,7 @@
 				// Axis helper
 				var object = new THREE.AxisHelper( 100 );
 				object.position.set(0, 0, 0);
-				scene.add(object);
+				//scene.add(object);
 
                 // Intersections helper
                 var geometry = new THREE.CylinderGeometry( 0, 1, 1, 3 );
@@ -239,6 +226,20 @@
                 geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.PI / 2 ) );
                 helper = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() );
                 // scene.add(helper);
+
+                // Lights
+
+				var ambientLight = new THREE.AmbientLight( 0xffffff );
+				scene.add( ambientLight );
+
+				pointLight = new THREE.PointLight( 0xffffff, 1.25, 1000 );
+				pointLight.position.set( 0, 0, 600 );
+				scene.add( pointLight );
+
+				directionalLight = new THREE.SpotLight( 0xffffff );
+				//directionalLight.castShadow = true;
+				directionalLight.position.set( 0, 10, 0 );
+				scene.add( directionalLight );
 
                 // Agent
                 var configOgro = {
@@ -287,6 +288,10 @@
 	                moveRight: false
 	            };
 
+                character.root.aura = Extras.Aura(1000, THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" ), pointLight);
+                character.root.add(character.root.aura.particleCloud);
+                character.root.aura.start();
+
                 var baseCharacter = new THREE.MD2CharacterComplex();
                 baseCharacter.scale = 1;
 
@@ -307,6 +312,7 @@
                     character.root.position.x = 0;
                     character.root.position.y = 0;
                     character.root.position.z = 0;
+                    character.root.position.set( startPosition.x, 0, startPosition.z );
 
                     //character.root.castShadow = true;
 
@@ -314,20 +320,6 @@
                 };
 
                 baseCharacter.loadParts( configOgro );
-
-                // Lights
-
-				var ambientLight = new THREE.AmbientLight( 0xffffff );
-				scene.add( ambientLight );
-
-				pointLight = new THREE.PointLight( 0xffffff, 1.25, 1000 );
-				pointLight.position.set( 0, 0, 600 );
-				scene.add( pointLight );
-
-				directionalLight = new THREE.SpotLight( 0xffffff );
-				//directionalLight.castShadow = true;
-				directionalLight.position.set( 0, 10, 0 );
-				scene.add( directionalLight );
 
 				// manager
 				var manager = new THREE.LoadingManager();
@@ -389,7 +381,7 @@
 					loader.load( 'obj/sc2/dota_trees.obj', function ( object ) {
 						object.traverse( function ( child ) {
 							if ( child instanceof THREE.Mesh ) {
-								for (var i = 0; i < child.geometry.vertices.length && i < 200; i++) {
+								for (var i = 0; i < child.geometry.vertices.length && i < 100; i++) {
 									__add_tree(child.geometry.vertices[i]);
 								}
 							}
@@ -602,8 +594,8 @@
 				gui.close();
 
 				setTimeout(function() {
-					Module.set_cellSize(1);
-					Module.set_cellHeight(1);
+					Module.set_cellSize(2);
+					Module.set_cellHeight(2);
 					Module.initWithFile('/build/obj/sc2/dota_simple.obj');
 					Module.build();
 				}, 5000);
@@ -664,7 +656,7 @@
 
 	                    } else {
 
-	                    	__add_tree(i_pos);
+	                    	// __add_tree(i_pos);
 	                    }
 
                       } else {
@@ -822,6 +814,7 @@
                 camera.position.y = 50; // crraaaapp //
 
                 character.update( delta );
+                character.root.aura.update( delta );
 
                 directionalLight.position.clone( character.root.position );
 				directionalLight.position.y += 1;

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - particles - shapes</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				color: #aaa;
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+
+		<script src="../build/three.min.js"></script>
+
+		<script src="js/libs/stats.min.js"></script>
+		<script src="js/libs/tween.min.js"></script>
+		<script src="js/Sparks.js"></script>
+		<script src="js/Extras.js"></script>
+
+		<script src="js/shaders/CopyShader.js"></script>
+		<script src="js/shaders/FilmShader.js"></script>
+		<script src="js/shaders/FocusShader.js"></script>
+		<script src="js/shaders/HorizontalBlurShader.js"></script>
+		<script src="js/shaders/TriangleBlurShader.js"></script>
+		<script src="js/shaders/VerticalBlurShader.js"></script>
+
+		<script src="js/postprocessing/EffectComposer.js"></script>
+		<script src="js/postprocessing/RenderPass.js"></script>
+		<script src="js/postprocessing/ShaderPass.js"></script>
+		<script src="js/postprocessing/MaskPass.js"></script>
+		<script src="js/postprocessing/BloomPass.js"></script>
+		<script src="js/postprocessing/FilmPass.js"></script>
+
+		<!-- load the font file from canvas-text -->
+
+
+			<script type="x-shader/x-vertex" id="vertexshader">
+
+				attribute float size;
+				attribute vec3 pcolor;
+
+				varying vec3 vColor;
+
+				void main() {
+
+					vColor = pcolor;
+
+					vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+					gl_PointSize = size * ( 200.0 / length( mvPosition.xyz ) );
+
+					gl_Position = projectionMatrix * mvPosition;
+
+				}
+
+			</script>
+
+			<script type="x-shader/x-fragment" id="fragmentshader">
+
+				uniform sampler2D texture;
+
+				varying vec3 vColor;
+
+				void main() {
+
+					vec4 outColor = texture2D( texture, gl_PointCoord );
+
+					gl_FragColor = outColor * vec4( vColor, 1.0 );
+
+				}
+
+			</script>
+
+		<script>
+
+			var container, stats;
+
+			var camera, scene, renderer;
+
+			var group, text, plane;
+
+			var speed = 50;
+
+			var pointLight;
+
+			var targetRotation = 0;
+			var targetRotationOnMouseDown = 0;
+
+			var mouseX = 0;
+			var mouseXOnMouseDown = 0;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+			var delta = 1, clock = new THREE.Clock();
+
+			var heartShape, particleCloud, sparksEmitter, emitterPos;
+			var _rotation = 0;
+			var timeOnShapePath = 0;
+
+			var composer;
+			var effectBlurX, effectBlurY, hblur, vblur;
+
+			var cloud;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				// CAMERA
+
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.set( 0, 150, 400 );
+
+				// SCENE
+
+				scene = new THREE.Scene();
+
+				// LIGHTS
+
+				var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+				directionalLight.position.set( 0, -1, 1 );
+				directionalLight.position.normalize();
+				scene.add( directionalLight );
+
+				pointLight = new THREE.PointLight( 0xffffff, 2, 300 );
+				pointLight.position.set( 0, 0, 0 );
+				scene.add( pointLight );
+
+				group = new THREE.Object3D();
+				//scene.add( group );
+
+				// Create particle objects for Three.js
+				cloud = new Extras.ParticleCloud( 10000, THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" ), pointLight );
+
+				function circle ( radius, segments ) {
+					var circle = new THREE.Shape();
+					var radius = 30;
+
+					for (var i = 0; i < 16; i++) {
+					  var pct = (i + 1) / 16;
+					  var theta = pct * Math.PI * 2.0;
+					  var x = radius * Math.cos(theta);
+					  var y = 0;
+					  if (i == 0) {
+					    circle.moveTo(x, y);
+					  } else {
+					    circle.lineTo(x, y);
+					  }
+					}
+					return circle;
+				}
+
+				cloud.shape = circle();
+
+				//group.add( cloud.particleCloud );
+
+				cloud.start();
+
+				scene.add( cloud.particleCloud );
+
+
+				// RENDERER
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setClearColor( 0x000000, 1 );
+
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				// POST PROCESSING
+
+				var effectFocus = new THREE.ShaderPass( THREE.FocusShader );
+
+				var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
+				effectFilm = new THREE.FilmPass( 0.5, 0.25, 2048, false );
+
+				var shaderBlur = THREE.TriangleBlurShader;
+				effectBlurX = new THREE.ShaderPass( shaderBlur, 'texture' );
+				effectBlurY = new THREE.ShaderPass( shaderBlur, 'texture' );
+
+				var radius = 15;
+				var blurAmountX = radius / window.innerWidth;
+				var blurAmountY = radius / window.innerHeight;
+
+				hblur = new THREE.ShaderPass( THREE.HorizontalBlurShader );
+				vblur = new THREE.ShaderPass( THREE.VerticalBlurShader);
+
+				hblur.uniforms[ 'h' ].value =  1 / window.innerWidth;
+				vblur.uniforms[ 'v' ].value =  1 / window.innerHeight;
+
+				effectBlurX.uniforms[ 'delta' ].value = new THREE.Vector2( blurAmountX, 0 );
+				effectBlurY.uniforms[ 'delta' ].value = new THREE.Vector2( 0, blurAmountY );
+
+				effectFocus.uniforms[ 'sampleDistance' ].value = 0.99; //0.94
+				effectFocus.uniforms[ 'waveFactor' ].value = 0.003;  //0.00125
+
+				var renderScene = new THREE.RenderPass( scene, camera );
+
+				composer = new THREE.EffectComposer( renderer );
+				composer.addPass( renderScene );
+				//composer.addPass( hblur );
+				composer.addPass( vblur );
+				
+				vblur.renderToScreen = true;
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+
+
+			function render() {
+
+				delta = speed * clock.getDelta();
+
+				cloud.update(delta);
+
+				// Pretty cool effect if you enable this
+				// particleCloud.rotation.y += 0.05;
+
+				//group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
+
+				renderer.clear();
+
+				// renderer.render( scene, camera );
+				composer.render( 0.1 );
+
+			}
+
+		</script>
+
+	</body>
+</html>
