@@ -232,18 +232,20 @@ THREE.DotaControls = function ( object, domElement ) {
 
 	this.update = function( delta ) {
 
-		var moveMult = delta * this.movementSpeed;
-		var rotMult = delta * this.rollSpeed;
+		if ( this.enabled ) {
+			var moveMult = delta * this.movementSpeed;
+			var rotMult = delta * this.rollSpeed;
 
-		this.object.translateX( this.moveVector.x * moveMult );
-		this.object.translateY( this.moveVector.y * moveMult );
-		this.object.translateZ( this.moveVector.z * moveMult );
+			this.object.translateX( this.moveVector.x * moveMult );
+			this.object.translateY( this.moveVector.y * moveMult );
+			this.object.translateZ( this.moveVector.z * moveMult );
 
-		this.tmpQuaternion.set( this.rotationVector.x * rotMult, this.rotationVector.y * rotMult, this.rotationVector.z * rotMult, 1 ).normalize();
-		this.object.quaternion.multiply( this.tmpQuaternion );
+			this.tmpQuaternion.set( this.rotationVector.x * rotMult, this.rotationVector.y * rotMult, this.rotationVector.z * rotMult, 1 ).normalize();
+			this.object.quaternion.multiply( this.tmpQuaternion );
 
-		// expose the rotation vector for convenience
-		this.object.rotation.setFromQuaternion( this.object.quaternion, this.object.rotation.order );
+			// expose the rotation vector for convenience
+			this.object.rotation.setFromQuaternion( this.object.quaternion, this.object.rotation.order );
+		}
 	};
 
 	this.updateMovementVector = function() {
