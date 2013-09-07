@@ -39,8 +39,12 @@
 		<script src="../build/three.js"></script>
         <script src="../build/tween.min.js"></script>
 
+        <script src="js/lodash.js"></script>
+
 		<script src="js/Sparks.js"></script>
         <script src='js/Extras.js'></script>
+
+        <script src='js/gaming/tower.js'></script>
 
         <script src='js/MD2CharacterComplex.js'></script>
         <script src='js/Proctree.js'></script>
@@ -188,6 +192,8 @@
 			var PARTICLECLOUDS = [];
 			var TREES = [];
 
+			var treeObject;
+
 			var clickedPostions = [undefined, undefined];
 
 			var mouseX = 0, mouseY = 0, treesMesheNext = 0;
@@ -214,7 +220,7 @@
 
 				scene = new THREE.Scene();
 				scene.fog = new THREE.FogExp2( 0x0, 0.00055 );
-				//scene.fog = new THREE.Fog( 0x000000, 1, 50 );
+				scene.fog = new THREE.Fog( 0x000000, 1, 500 );
 
 				// Axis helper
 				var object = new THREE.AxisHelper( 100 );
@@ -292,7 +298,9 @@
                 character.root.aura = Extras.Aura('circle', 1000, THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" ), pointLight);
                 character.root.add(character.root.aura.particleCloud);
                 character.root.aura.start();
-                PARTICLECLOUDS.push(character.root.aura);
+		        container.addEventListener( 'render-update', _.bind( function(event){
+		        	character.root.aura.update( event.detail.delta );
+		        }, character.root.aura ) );
 
                 var baseCharacter = new THREE.MD2CharacterComplex();
                 baseCharacter.scale = 1;
@@ -318,14 +326,16 @@
 
                     //character.root.castShadow = true;
 
+                    THREEGAME.CHARACTERS.push( character.root );
+
                     scene.add(character.root);
                 };
 
                 baseCharacter.loadParts( configOgro );
 
-				// manager
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
+				// LOAD_MANAGER
+				LOAD_MANAGER = new THREE.LoadingManager();
+				LOAD_MANAGER.onProgress = function ( item, loaded, total ) {
 					console.log( item, loaded, total );
 				};
 
@@ -360,7 +370,7 @@
 				// material.wrapAround = true;
 
 				// model
-				var loader = new THREE.OBJLoader( manager );
+				var loader = new THREE.OBJLoader( LOAD_MANAGER );
 				loader.load( 'obj/sc2/dota_simple.obj', function ( object ) {
 					ground = object;
 					//ground.receiveShadow = true;
@@ -379,7 +389,7 @@
 
 				// model
 				setTimeout(function () {
-					var loader = new THREE.OBJLoader( manager );
+					var loader = new THREE.OBJLoader( LOAD_MANAGER );
 					loader.load( 'obj/sc2/dota_trees.obj', function ( object ) {
 						object.traverse( function ( child ) {
 							if ( child instanceof THREE.Mesh ) {
@@ -388,6 +398,7 @@
 								}
 							}
 						} );
+						scene.add(treeObject);
 					});
 				}, 3000);
 
@@ -572,29 +583,8 @@
 					},
 				};
 
-				gui = new dat.GUI();
-				gui.add(Config, 'Next').listen();
-				gui.add(Config, 'init');
-				gui.add(Config, 'build');
-				gui.add(Config, 'detailMeshPoly').listen();
-				gui.add(Config, 'drawNavMesh');
-				//gui.add(Config, 'drawHeightfieldRegions');
-
-				gui.add(Config, 'navMeshVertices', 0, 10000).listen();
-
-				[	'cellSize', 'cellHeight', 'agentHeight', 'agentRadius', 'agentMaxClimb',
-					'agentMaxSlope', 'regionMinSize', 'regionMergeSize', 'monotonePartitioning',
-					'edgeMaxLen', 'edgeMaxError', 'detailSampleDist', 'detailSampleMaxError'
-				].forEach(function(s) {
-					gui.add(Config, s, Config['_'+s][0], Config['_'+s][1] ).onFinishChange(function(){
-						Module['set_' + s]( Config[s] );
-						Config.Next = 'Please wait';
-						Module.build();
-						Config.Next = 'Change values, rebuild';
-					});
-				});
-
-				gui.close();
+				gui = {}; //new dat.GUI();
+		
 
 				setTimeout(function() {
 					Module.set_cellSize(2);
@@ -723,6 +713,8 @@
 				object.scene.children[0].material.materials[0].transparent = true;
 				//object.scene.children[0].material.materials[1].depthTest = false;
 				object.scene.children[0].material.materials[1].transparent = true;
+				object.scene.children[0].matrixAutoUpdate = false;
+
 				TREES.push(object.scene.children[0]);
 			});
 
@@ -733,55 +725,38 @@
 				// clone a tree
 				var refTreeIndex = Math.round(Math.random());
 				var refTree = TREES[ refTreeIndex ];
-				var treeObject = new THREE.Object3D();
 
-				// for (var i = 0; i < refTree.children.length; i++) {
-				// 	console.log( refTree.children[i].material );
-				// 	treeObject.add(new THREE.Mesh(refTree.children[i].geometry, refTree.children[i].material));
-				// }
-				treeObject.add( new THREE.Mesh( refTree.geometry, refTree.material ) );
+				var tree = new THREE.Mesh( refTree.geometry, refTree.material );	
+				tree.position = position;
+				tree.scale = new THREE.Vector3(4, 4, 4);
+				tree.rotation.y = Math.random() * 90 * ( Math.PI / 180 );
 
-				treeObject.position = position;
-				treeObject.scale = new THREE.Vector3(4, 4, 4);
-				treeObject.rotation.y = Math.random() * 90 * ( Math.PI / 180 );
 				if (refTreeIndex == 0) {
-					treeObject.rotation.x = - 90 * ( Math.PI / 180 );
+					tree.rotation.x = - 90 * ( Math.PI / 180 );
 				}
 				if (refTreeIndex == 1) {
-					//treeObject.rotation.x = 10 * ( Math.PI / 180 );
-					//treeObject.rotation.y = 10 * ( Math.PI / 180 );
-					treeObject.rotation.z = 70 * ( Math.PI / 180 );
+					//tree.rotation.x = 10 * ( Math.PI / 180 );
+					//tree.rotation.y = 10 * ( Math.PI / 180 );
+					tree.rotation.z = 70 * ( Math.PI / 180 );
 				}
 
-				scene.add(treeObject);
+				tree.matrixAutoUpdate = false;
+				tree.updateMatrix();
+
+				treeObject = treeObject || new THREE.Object3D();
+				treeObject.add( tree );
+				//THREE.GeometryUtils.merge( treeObject.children[0].geometry , tree );
 			};
 
 
-
-			loader.load( 'obj/dota/lantern.dae', function ( loaded ) {
-				//object.scene.children[0].material.materials[0].depthTest = false;
-				//object.scene.children[0].material.materials[0].transparent = true;
-				//object.scene.children[0].material.materials[1].depthTest = false;
-				//object.scene.children[0].material.materials[1].transparent = true;
-				//TREES.push(object.scene.children[0]);
-				var object = new THREE.Object3D();
-
-				var loaded = loaded.scene.children[0];
-				loaded.scale.set(8, 8, 8);
-				loaded.rotation.x = -90 * ( Math.PI / 180 );
-
-				object.add(loaded);
-
-                object.aura = Extras.Aura('point', 20000, THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" ), pointLight);
-                object.aura.particleCloud.position.set(0, 28, 1);
-                object.add(object.aura.particleCloud);
-                PARTICLECLOUDS.push(object.aura);
-                object.aura.start();
-
-				scene.add(object);
+			var defenseTower = new THREEGAME.DefenseTower( 0, 28, 1, {
+				transform: function (loaded) {
+					var loaded = loaded.scene.children[ 0 ];
+					loaded.scale.set( 8, 8, 8 );
+					loaded.rotation.x = -90 * ( Math.PI / 180 );
+				}
 			});
-
-
+			scene.add(defenseTower)
 
 
 			window.moveAlong = function(linepoints) {
@@ -842,6 +817,17 @@
                 TWEEN.update();
 
                 var delta = clock.getDelta();
+
+				var event = new CustomEvent( 'render-update', {
+					detail: {
+						'delta': delta
+					},
+					bubbles: true,
+					cancelable: true
+				});
+
+				container.dispatchEvent(event);
+
                 cameraControls.update( delta );
                 camera.position.y = 60; // crraaaapp //
 

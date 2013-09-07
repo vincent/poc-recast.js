@@ -24,7 +24,7 @@ Extras.Pool.prototype.add = function( v ) {
 
 
 
-Extras.ParticleCloud = function( length, texture, light ) {
+Extras.ParticleCloud = function( length, texture, light, options ) {
 
 	this.length = length;
 	this.light = light;
@@ -156,7 +156,9 @@ Extras.ParticleCloud.prototype.onParticleCreated = function( p ) {
 		this.particles.vertices[ target ] = p.position;
 
 		this.values_color[ target ].setHSL( this.hue, 0.6, 0.1 );
-		this.light.color.setHSL( this.hue, 0.8, 0.5 );
+		if (this.light) {
+			this.light.color.setHSL( this.hue, 0.8, 0.5 );
+		}
 	};
 };
 
@@ -183,7 +185,17 @@ Extras.ParticleCloud.prototype.start = function () {
 	this.sparksEmitter.start();
 };
 
-Extras.ParticleCloud.prototype.update = function (delta) {
+Extras.ParticleCloud.prototype.stop = function () {
+
+	this.sparksEmitter.stop();
+};
+
+Extras.ParticleCloud.prototype.destroy = function () {
+
+	delete this.sparksEmitter;
+};
+
+Extras.ParticleCloud.prototype.update = function ( delta ) {
 
 	this.delta = delta;
 	this.particleCloud.geometry.verticesNeedUpdate = true;
@@ -194,7 +206,7 @@ Extras.ParticleCloud.prototype.update = function (delta) {
 
 
 
-Extras.Aura = function( particulesCount, texture, light ) {
+Extras.Aura = function( geometry, particulesCount, texture, light ) {
 
 	// Create particle objects for Three.js
 	var cloud = new Extras.ParticleCloud( particulesCount, texture, light );
@@ -217,7 +229,17 @@ Extras.Aura = function( particulesCount, texture, light ) {
 		return circle;
 	}
 
-	cloud.shape = circle( 6, 17);
+	switch (geometry) {
+		case 'point':
+			cloud.shape = circle( 0.5, 3);
+			break;
+
+		default:
+		case 'circle':
+			cloud.shape = circle( 6, 17);
+			break;
+	}
+
 
 	return cloud;
 };
