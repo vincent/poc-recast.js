@@ -28,13 +28,26 @@
 				position: absolute;
 				display: none;
 			}
+			#hud {
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom: 0;
+				width: 30%;
+				background: #222;
+				z-index: -10;
+			}
 		</style>
+		<link rel="stylesheet" type="text/css" href="animate.css">
 	</head>
 
 	<body>
 		<img id="loading" src="loading.gif">
 
 		<canvas id="canvas" style="display:none"></canvas>
+
+		<div id="hud"></div>
+		<div id="wrapper" class="animated"></div>
 
 		<script src="../build/three.js"></script>
         <script src="../build/tween.min.js"></script>
@@ -45,6 +58,7 @@
         <script src='js/Extras.js'></script>
 
         <script src='js/gaming/tower.js'></script>
+        <script src='js/huds/sidemenu.js'></script>
 
         <script src='js/MD2CharacterComplex.js'></script>
         <script src='js/Proctree.js'></script>
@@ -213,7 +227,8 @@
 
 			function init( ready ) {
 
-				container = document.createElement( 'div' );
+				container = document.getElementById( 'wrapper' );
+				container.className = 'animated';
 				document.body.appendChild( container );
 
 				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -414,7 +429,7 @@
 				stats = new Stats();
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+				document.getElementById('hud').appendChild( stats.domElement );
 
 				renderer = new THREE.WebGLRenderer();
 				// renderer.shadowMapEnabled = true;
@@ -852,7 +867,7 @@
                 directionalLight.position.clone( character.root.position );
 				directionalLight.position.y += 1;
 	
-				composer.render();
+				if (cameraControls.enabled) composer.render();
 			}
 
 		</script>

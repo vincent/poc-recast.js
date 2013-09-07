@@ -2,156 +2,163 @@
 // LOAD_MANAGER
 
 var THREEGAME = THREEGAME || {
-	CHARACTERS: [],
+    CHARACTERS: [],
 };
 
 THREEGAME.DefenseTower = function( x, y, z, options ) {
 
-	THREE.Object3D.apply( this );
+    THREE.Object3D.apply( this );
 
-	this.bulletSpeed = 100;
+    var self = this,
 
-	/////
+        x = x ||  0,
+        y = y || 28,
+        z = z ||  1,
+        options = options || {}
+        ;
 
-	this._firing = false;
-	this._currentTweens = [];
-
-	var self = this,
-
-		x = x ||  0,
-		y = y || 28,
-		z = z ||  1,
-		options = options || {}
-		;
-
-	options.start = options.start || true;
-	options.transform = options.transform || function( obj3d ){ return obj3d },
-	options.fireIntensity = options.fireIntensity || 20000;
-	options.orbTexture = options.orbTexture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" );
-	options.fireTexture = options.fireTexture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" );
+    this.bulletSpeed = options.bulletSpeed || 10;
+    this.fireSpeed = options.fireSpeed || 1;
 
 
+    /////
 
+    this._firing = false;
+    this._currentTweens = [];
 
-	var loader = new THREE.ColladaLoader();
-	loader.load( 'obj/dota/lantern.dae', function ( loaded ) {
+    this.options = _.merge({
+                start: true,
+        fireIntensity: 20000,
+            transform: function( obj3d ){ return obj3d },
+           orbTexture: options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" ),
+          fireTexture: options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare1_alpha.png" ),
+    } , options );
 
-		options.transform( loaded );
+    // self.fireCloud = new Extras.ParticleCloud( 10000, self.options.fireTexture );
 
-	    self.aura = Extras.Aura( 'point', options.fireIntensity, options.texture, pointLight );
-	    self.aura.particleCloud.position.set( x, y, z );
-	    self.add( self.aura.particleCloud );
-	    
-	    var lantern = loaded.scene.children[0];
-	    delete loaded;
+    var loader = new THREE.ColladaLoader();
+    loader.load( 'obj/dota/lantern.dae', function ( loaded ) {
 
-		self.add( lantern );
+        options.transform( loaded );
 
-		var selfUpdate = _.bind( self.update, self );
+        self.aura = Extras.Aura( 'point', self.options.fireIntensity, self.options.orbTexture, pointLight );
+        self.aura.particleCloud.position.set( x, y, z );
+        self.add( self.aura.particleCloud );
+        
+        var lantern = loaded.scene.children[ 0 ];
+        delete loaded;
 
-	    if ( options.start ) {
-	        self.aura.start();
-	        container.addEventListener( 'render-update', selfUpdate );
-	    }
-	});
+        self.add( lantern );
+
+        var selfUpdate = _.bind( self.update, self );
+
+        if ( self.options.start ) {
+            self.aura.start();
+            
+            container.addEventListener( 'render-update', selfUpdate );
+        }
+    });
 };
 THREEGAME.DefenseTower.prototype = new THREE.Object3D();
 
 THREEGAME.DefenseTower.prototype.update = function( event ) {
 
-	var self = this;
+    var self = this;
 
-	if ( this.aura ) {
-		this.aura.update( event.detail.delta );
-	}
+    if ( this.aura ) {
+        this.aura.update( event.detail.delta );
+    }
 
-	if (this._firing) return;
+    if (this._firing) return;
 
-	_.each( THREEGAME.CHARACTERS, function( c ) {
-		if ( c.position.distanceTo( self.position ) < 70 ) {
+    var charDistance;
+    _.each( THREEGAME.CHARACTERS, function( c ) {
+        charDistance = c.position.distanceTo( self.position );
+        if ( charDistance < 70 ) {
 
-			self.fireTo( c );
+            this.fireSpeed += (70 - charDistance);
 
-		}
-	});
+            self.fireTo( c );
+
+        }
+    });
 
 };
 
 THREEGAME.DefenseTower.prototype.stopFiring = function( target ) {
-	this._firing = false;
+    this._firing = false;
 };
 
 THREEGAME.DefenseTower.prototype.fireTo = function( target ) {
 
-	if (this._firing) return;
+    if (this._firing) return;
     this._firing = true;
 
+    console.log('prepare bullet');
+    //return;
+    
+    var startPosition = this.position.clone().setY( 28 );
+    var vectorPosition = target.position.clone().add(startPosition).divideScalar(2).setY( 28 + 5 );
 
-	console.log('prepare bullet');
-	//return;
-	
-	var startPosition = this.position.clone().setY( 28 );
-        var vectorPosition = target.position.clone().sub( startPosition ).setY( 28 - 5 );
+    var self = this,
+        line = new THREE.SplineCurve3([ startPosition, vectorPosition, target.position ]),
+        cloud = new Extras.ParticleCloud( 10000, self.options.fireTexture, null ),
+        cloudUpdate = _.bind( function(event){ cloud.update(event.detail.delta); }, cloud )
+        ;
 
+    var tween = new TWEEN.Tween({ distance: 0 })
 
-	var self = this,
-		line = new THREE.SplineCurve3([ startPosition, vectorPosition, target.position ]),
-		cloud = new Extras.ParticleCloud( 10000, THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare0_alpha.png" ) ),
-		cloudUpdate = _.bind( function(event){ cloud.update(event.detail.delta); }, cloud )
-		;
-
-	var tween = new TWEEN.Tween({ distance: 0 })
-
-        .to( { distance: 1 }, line.getLength() * 10 ) // use 
+        .to( { distance: 1 }, line.getLength() * self.bulletSpeed ) // use 
 
         .easing(TWEEN.Easing.Linear.None)
 
         .onStart(function(){
-	        container.addEventListener( 'render-update', cloudUpdate );
+            container.addEventListener( 'render-update', cloudUpdate );
 
-			self.add( cloud.particleCloud );
-			cloud.start();
+            self.add( cloud.particleCloud );
+            cloud.start();
 
-			console.log('fire');
+            console.log('fire');
 
             setTimeout( function(){
-				console.log('timeout');
-				tween.stop();
-		        container.removeEventListener( 'render-update', cloudUpdate );
+                console.log('timeout');
+                if (tween) { tween.stop(); }
+                container.removeEventListener( 'render-update', cloudUpdate );
 
-	            self._firing = false;
-				self.remove( cloud.particleCloud );
-				cloud.stop();
-				cloud.destroy();
+                self._firing = false;
+                self.remove( cloud.particleCloud );
 
-            }, 1000 );
+            }, 1000 / self.fireSpeed );
         })
         
         .onComplete(function(){
-	        container.removeEventListener( 'render-update', cloudUpdate );
+            container.removeEventListener( 'render-update', cloudUpdate );
 
-            self._firing = false;
-			self.remove( cloud.particleCloud );
-			cloud.stop();
-			cloud.destroy();
+            self.remove( cloud.particleCloud );
+            cloud.stop();
+            delete cloud;
 
-			console.log('stop');
+            console.log('stop');
         })
         
         .onUpdate(function(){
-			// get the position data half way along the path
-			var pathPosition = line.getPoint(this.distance);
+            // get the position data half way along the path
+            var pathPosition = line.getPoint(this.distance);
 
-			// get the orientation angle quarter way along the path
-			var tangent = line.getTangent(this.distance);
-			var angle = Math.atan2(-tangent.z, tangent.x);
+            // get the orientation angle quarter way along the path
+            // var tangent = line.getTangent(this.distance);
+            // var angle = Math.atan2(-tangent.z, tangent.x);
+            // cloud.particleCloud.rotation.y = angle;
 
-			// cloud.particleCloud.rotation.y = angle;
+            // random
+            // pathPosition.x += (Math.random()*2 -1) * .0001;
+            // pathPosition.y += (Math.random()*2 -1) * .0001;
+            // pathPosition.z += (Math.random()*2 -1) * .0001;
 
-			// move the man to that position
-			cloud.particleCloud.position.set(pathPosition.x, pathPosition.y, pathPosition.z);
+            // move the man to that position
+            cloud.particleCloud.position.set(pathPosition.x, pathPosition.y, pathPosition.z);
 
-			cloud.particleCloud.updateMatrix();
+            cloud.particleCloud.updateMatrix();
         })
         .start();
 };

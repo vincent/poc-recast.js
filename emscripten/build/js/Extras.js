@@ -26,11 +26,14 @@ Extras.Pool.prototype.add = function( v ) {
 
 Extras.ParticleCloud = function( length, texture, light, options ) {
 
+	var options = options || {};
 	this.length = length;
 	this.light = light;
 
 	this.delta = 0;
 	this.pool = new Extras.Pool();
+
+	this.colorSL = options.colorSL || [ 0.6, 0.1 ];
 
 	//////////////////////////////
 
@@ -155,7 +158,7 @@ Extras.ParticleCloud.prototype.onParticleCreated = function( p ) {
 
 		this.particles.vertices[ target ] = p.position;
 
-		this.values_color[ target ].setHSL( this.hue, 0.6, 0.1 );
+		//this.values_color[ target ].setHSL( this.hue, this.colorSL[0], this.colorSL[1] );
 		if (this.light) {
 			this.light.color.setHSL( this.hue, 0.8, 0.5 );
 		}

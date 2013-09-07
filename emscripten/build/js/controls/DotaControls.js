@@ -21,7 +21,11 @@ THREE.DotaControls = function ( object, domElement ) {
 
 	this.activeZoneTime = 300;
 
-	this.activeZoneFactor = 20;
+	this.activeZoneFactor = 30;
+	this.hudZoneFactor = 2;
+
+	this.hud = new THREEGAME.HUD.sidemenu(); // document.getElementById('hud');
+	this.hud.close();
 
 	// disable default target object behavior
 
@@ -133,63 +137,80 @@ THREE.DotaControls = function ( object, domElement ) {
 
 	this.mousemove = function( event ) {
 
+		var container = this.getContainerDimensions();
+
 		if (this._keyboardHasFocus) return;
 
-		var now = (new Date()).getTime();
+		if (event.pageX < container.size[ 0 ] / 100 * this.hudZoneFactor) {
 
-		var container = this.getContainerDimensions();
-		var activeZoneWidth  = container.size[ 0 ] / 100 * this.activeZoneFactor;
-		var activeZoneHeight = container.size[ 1 ] / 100 * this.activeZoneFactor;
+			this.hud.open();
+			this.enabled = false;
+			return;
 
-		if (event.pageX > container.size[ 0 ] - activeZoneWidth) {
+		} else if ( this.hud.isOpen() ) {
 
-			this._inActiveZone.right = this._inActiveZone.right || now;
-			if (now - this._inActiveZone.right > this.activeZoneTime) {
-				this.moveState.right = 1;
-			}
-
-		} else {
-			this._inActiveZone.right= 0;
-			this.moveState.right = 0;
+			this.hud.close();
+			this.enabled = true;
 		}
 
-		if (event.pageX < activeZoneWidth) {
+		if ( this.enabled ) {
 
-			this._inActiveZone.left = this._inActiveZone.left || now;
-			if (now - this._inActiveZone.left > this.activeZoneTime) {
-				this.moveState.left = 1;
+			var now = (new Date()).getTime();
+
+			var activeZoneWidth  = container.size[ 0 ] / 100 * this.activeZoneFactor;
+			var activeZoneHeight = container.size[ 1 ] / 100 * this.activeZoneFactor;
+
+
+			if (event.pageX > container.size[ 0 ] - activeZoneWidth) {
+
+				this._inActiveZone.right = this._inActiveZone.right || now;
+				if (now - this._inActiveZone.right > this.activeZoneTime) {
+					this.moveState.right = 1;
+				}
+
+			} else {
+				this._inActiveZone.right= 0;
+				this.moveState.right = 0;
 			}
 
-		} else {
-			this._inActiveZone.left = 0;
-			this.moveState.left = 0;
-		}
+			if (event.pageX < activeZoneWidth) {
 
-		if (event.pageY < activeZoneHeight) {
+				this._inActiveZone.left = this._inActiveZone.left || now;
+				if (now - this._inActiveZone.left > this.activeZoneTime) {
+					this.moveState.left = 1;
+				}
 
-			this._inActiveZone.forward = this._inActiveZone.forward || now;
-			if (now - this._inActiveZone.forward > this.activeZoneTime) {
-				this.moveState.forward = 1;
+			} else {
+				this._inActiveZone.left = 0;
+				this.moveState.left = 0;
 			}
 
-		} else {
-			this._inActiveZone.forward = 0;
-			this.moveState.forward = 0;
-		}
+			if (event.pageY < activeZoneHeight) {
 
-		if (event.pageY > container.size[ 1 ] - activeZoneHeight) {
+				this._inActiveZone.forward = this._inActiveZone.forward || now;
+				if (now - this._inActiveZone.forward > this.activeZoneTime) {
+					this.moveState.forward = 1;
+				}
 
-			this._inActiveZone.backward = this._inActiveZone.backward || now;
-			if (now - this._inActiveZone.backward > this.activeZoneTime) {
-				this.moveState.back = 1;
+			} else {
+				this._inActiveZone.forward = 0;
+				this.moveState.forward = 0;
 			}
 
-		} else {
-			this._inActiveZone.backward = 0;
-			this.moveState.back = 0;
-		}
+			if (event.pageY > container.size[ 1 ] - activeZoneHeight) {
 
-		this.updateMovementVector();
+				this._inActiveZone.backward = this._inActiveZone.backward || now;
+				if (now - this._inActiveZone.backward > this.activeZoneTime) {
+					this.moveState.back = 1;
+				}
+
+			} else {
+				this._inActiveZone.backward = 0;
+				this.moveState.back = 0;
+			}
+
+			this.updateMovementVector();
+		}
 	};
 
 	this.mouseup = function( event ) {
