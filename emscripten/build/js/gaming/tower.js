@@ -30,8 +30,8 @@ THREEGAME.DefenseTower = function( x, y, z, options ) {
                 start: true,
         fireIntensity: 20000,
             transform: function( obj3d ){ return obj3d },
-           orbTexture: options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" ),
-          fireTexture: options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare1_alpha.png" ),
+           orbTexture: options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare1_alpha.png" ),
+          fireTexture: options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare0_alpha.png" ),
     } , options );
 
     // self.fireCloud = new Extras.ParticleCloud( 10000, self.options.fireTexture );
@@ -76,7 +76,7 @@ THREEGAME.DefenseTower.prototype.update = function( event ) {
         charDistance = c.position.distanceTo( self.position );
         if ( charDistance < 70 ) {
 
-            this.fireSpeed += (70 - charDistance);
+            // this.fireSpeed += (70 - charDistance);
 
             self.fireTo( c );
 
@@ -93,16 +93,15 @@ THREEGAME.DefenseTower.prototype.fireTo = function( target ) {
 
     if (this._firing) return;
     this._firing = true;
-
-    console.log('prepare bullet');
-    //return;
     
     var startPosition = this.position.clone().setY( 28 );
     var vectorPosition = target.position.clone().add(startPosition).divideScalar(2).setY( 28 + 5 );
 
     var self = this,
         line = new THREE.SplineCurve3([ startPosition, vectorPosition, target.position ]),
-        cloud = new Extras.ParticleCloud( 10000, self.options.fireTexture, null ),
+        cloud = new Extras.ParticleCloud( 10000, self.options.fireTexture, null, {
+            colorHSL: .5
+        }),
         cloudUpdate = _.bind( function(event){ cloud.update(event.detail.delta); }, cloud )
         ;
 
@@ -118,17 +117,19 @@ THREEGAME.DefenseTower.prototype.fireTo = function( target ) {
             self.add( cloud.particleCloud );
             cloud.start();
 
-            console.log('fire');
+            setTimeout( function(){
+                self._firing = false;
+
+            }, 4000 / self.fireSpeed );
+
 
             setTimeout( function(){
-                console.log('timeout');
                 if (tween) { tween.stop(); }
                 container.removeEventListener( 'render-update', cloudUpdate );
 
-                self._firing = false;
+                // self._firing = false;
                 self.remove( cloud.particleCloud );
-
-            }, 1000 / self.fireSpeed );
+            }, 1000 );
         })
         
         .onComplete(function(){
@@ -136,9 +137,9 @@ THREEGAME.DefenseTower.prototype.fireTo = function( target ) {
 
             self.remove( cloud.particleCloud );
             cloud.stop();
-            delete cloud;
+            // self._firing = false;
 
-            console.log('stop');
+            delete cloud;
         })
         
         .onUpdate(function(){

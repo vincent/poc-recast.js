@@ -35,6 +35,8 @@ Extras.ParticleCloud = function( length, texture, light, options ) {
 
 	this.colorSL = options.colorSL || [ 0.6, 0.1 ];
 
+	this.colorHSL = options.colorHSL || new THREE.Color( 0xffffff );
+
 	//////////////////////////////
 
 	this._timeOnShapePath = 0;
@@ -158,7 +160,11 @@ Extras.ParticleCloud.prototype.onParticleCreated = function( p ) {
 
 		this.particles.vertices[ target ] = p.position;
 
-		//this.values_color[ target ].setHSL( this.hue, this.colorSL[0], this.colorSL[1] );
+		// this.values_color[ target ].setHSL( this.hue, 0.6, 0.1 ).multiply( this.colorHSL );
+		// this.values_color[ target ].set( this.colorHSL ); // .setHSL( this.hue, 0.6, 0.1 );
+		// this.values_color[ target ].multiplyScalar( this.colorHSL );
+
+		
 		if (this.light) {
 			this.light.color.setHSL( this.hue, 0.8, 0.5 );
 		}
