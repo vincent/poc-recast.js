@@ -27,7 +27,10 @@ THREEGAME.DefenseTower = function( x, y, z, options ) {
 	options.start = options.start || true;
 	options.transform = options.transform || function( obj3d ){ return obj3d },
 	options.fireIntensity = options.fireIntensity || 20000;
-	options.texture = options.texture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" );
+	options.orbTexture = options.orbTexture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" );
+	options.fireTexture = options.fireTexture || THREE.ImageUtils.loadTexture( "textures/lensflare2.jpg" );
+
+
 
 
 	var loader = new THREE.ColladaLoader();
@@ -38,8 +41,11 @@ THREEGAME.DefenseTower = function( x, y, z, options ) {
 	    self.aura = Extras.Aura( 'point', options.fireIntensity, options.texture, pointLight );
 	    self.aura.particleCloud.position.set( x, y, z );
 	    self.add( self.aura.particleCloud );
+	    
+	    var lantern = loaded.scene.children[0];
+	    delete loaded;
 
-		self.add( loaded.scene.children[0] );
+		self.add( lantern );
 
 		var selfUpdate = _.bind( self.update, self );
 
@@ -82,13 +88,14 @@ THREEGAME.DefenseTower.prototype.fireTo = function( target ) {
 
 
 	console.log('prepare bullet');
-	return;
+	//return;
 	
-	var startPosition = this.position.clone();
-	startPosition.y += 28;
+	var startPosition = this.position.clone().setY( 28 );
+        var vectorPosition = target.position.clone().sub( startPosition ).setY( 28 - 5 );
+
 
 	var self = this,
-		line = new THREE.SplineCurve3([ startPosition, target.position ]),
+		line = new THREE.SplineCurve3([ startPosition, vectorPosition, target.position ]),
 		cloud = new Extras.ParticleCloud( 10000, THREE.ImageUtils.loadTexture( "textures/lensflare/lensflare0_alpha.png" ) ),
 		cloudUpdate = _.bind( function(event){ cloud.update(event.detail.delta); }, cloud )
 		;
